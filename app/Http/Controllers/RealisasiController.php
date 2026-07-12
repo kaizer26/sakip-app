@@ -26,9 +26,14 @@ class RealisasiController extends Controller
 
     public function getContext(Indikator $indikator, $triwulan)
     {
-        $target = $indikator->target;
+        $targetRecord = \App\Models\Target::where('indikator_id', $indikator->id)->first();
         $targetField = 'target_tw' . $triwulan;
-        $targetVal = $target ? $target->$targetField : 0;
+        $targetXField = 'target_x_tw' . $triwulan;
+        $targetYField = 'target_y_tw' . $triwulan;
+
+        $targetVal = $targetRecord ? $targetRecord->$targetField : '-';
+        $targetXVal = $targetRecord ? $targetRecord->$targetXField : null;
+        $targetYVal = $targetRecord ? $targetRecord->$targetYField : null;
 
         $previousRealisasi = Realisasi::where('indikator_id', $indikator->id)
             ->where('triwulan', '<', $triwulan)
@@ -39,56 +44,68 @@ class RealisasiController extends Controller
             ->where('triwulan', $triwulan)
             ->first();
 
+        // Fix N+1: eager-load pegawai via relasi (pegawai_nip → nip)
         $aktivitas = $indikator->aktivitas()
             ->where('triwulan', $triwulan)
+            ->with('pegawai')
             ->get();
 
-        $aktivitasFormatted = $aktivitas->map(function($a) {
-            $pegawai = \App\Models\Pegawai::where('nip', $a->pegawai_nip)->first();
+        $aktivitasFormatted = $aktivitas->map(function ($a) {
             return [
-                'pegawai' => $pegawai ? $pegawai->nama : $a->pegawai_nip,
-                'uraian' => $a->uraian,
-                'tahapan' => $a->tahapan,
-                'tanggal' => $a->tanggal_mulai . ' - ' . $a->tanggal_selesai,
-                'lampirans' => $a->lampiran ?? []
+                'pegawai'              => $a->pegawai ? $a->pegawai->nama : $a->pegawai_nip,
+                'uraian'               => $a->uraian,
+                'tahapan'              => $a->tahapan,
+                'tanggal'              => $a->tanggal_mulai . ' - ' . $a->tanggal_selesai,
+                'lampirans'            => $a->lampiran ?? [],
+                'penjelasan_kegiatan'  => $a->penjelasan_kegiatan,
+                'realisasi_kegiatan'   => $a->realisasi_kegiatan,
             ];
         });
 
+        // Fix N+1: eager-load pegawai pada analisis
         $analisis = $indikator->analisis()
             ->where('triwulan', $triwulan)
+            ->with('pegawai')
             ->get();
 
-        $analisisFormatted = $analisis->map(function($a) {
-            $pegawai = \App\Models\Pegawai::where('nip', $a->pegawai_nip)->first();
+        $analisisFormatted = $analisis->map(function ($a) {
             return [
-                'pegawai' => $pegawai ? $pegawai->nama : $a->pegawai_nip,
-                'kendala' => $a->kendala,
-                'solusi' => $a->solusi,
+                'pegawai'  => $a->pegawai ? $a->pegawai->nama : $a->pegawai_nip,
+                'kendala'  => $a->kendala,
+                'solusi'   => $a->solusi,
                 'severity' => $a->severity,
-                'tanggal' => $a->created_at->format('Y-m-d'),
+                'tanggal'  => $a->created_at->format('Y-m-d'),
             ];
         });
 
-        $outputs = $indikator->outputMasters()->with(['outputRealisasis' => function($q) use ($triwulan) {
+        $outputs = $indikator->outputMasters()->with(['outputRealisasis' => function ($q) use ($triwulan) {
             $q->where('triwulan', $triwulan);
         }])->get();
 
         return response()->json([
-            'target' => $targetVal,
+            'target'         => $targetVal,
+            'target_x'       => $targetXVal,
+            'target_y'       => $targetYVal,
             'previous_value' => $previousRealisasi ? $previousRealisasi->realisasi_kumulatif : 0,
-            'current_value' => $currentRealisasi ? $currentRealisasi->realisasi_kumulatif : null,
-            'aktivitas' => $aktivitasFormatted,
-            'analisis' => $analisisFormatted,
-            'outputs' => $outputs->map(function($o) {
+            'current_value'  => $currentRealisasi ? $currentRealisasi->realisasi_kumulatif : null,
+            'current_x'      => $currentRealisasi ? $currentRealisasi->realisasi_x : null,
+            'current_y'      => $currentRealisasi ? $currentRealisasi->realisasi_y : null,
+            'definisi_x'     => $indikator->definisi_x,
+            'definisi_y'     => $indikator->definisi_y,
+            'aktivitas'      => $aktivitasFormatted,
+            'analisis'       => $analisisFormatted,
+            'outputs'        => $outputs->map(function ($o) {
                 $realisasi = $o->outputRealisasis->first();
                 return [
-                    'id' => $o->id,
-                    'nama_output' => $o->nama_output,
-                    'jenis_output' => $o->jenis_output,
-                    'is_achieved' => $o->is_achieved,
-                    'file_path' => $o->file_path,
-                    'volume' => $realisasi ? $realisasi->volume : null,
-                    'progres' => $realisasi ? $realisasi->progres : null,
+                    'id'             => $o->id,
+                    'nama_output'    => $o->nama_output,
+                    'jenis_output'   => $o->jenis_output,
+                    'penjelasan_ro'  => $o->penjelasan_ro,
+                    'target_volume'  => $o->target_volume,
+                    'is_achieved'    => $o->is_achieved,
+                    'file_path'      => $o->file_path,
+                    'volume'         => $realisasi ? $realisasi->volume : null,
+                    'progres'        => $realisasi ? $realisasi->progres : null,
                 ];
             })
         ]);
@@ -104,11 +121,13 @@ class RealisasiController extends Controller
         }
 
         $validated = $request->validate([
-            'indikator_id' => 'required|exists:indikators,id',
-            'triwulan' => 'required|integer|between:1,4',
+            'indikator_id'        => 'required|exists:indikators,id',
+            'triwulan'            => 'required|integer|between:1,4',
             'realisasi_kumulatif' => 'required|numeric',
-            'output_data' => 'nullable|array',
-            'output_data.*.volume' => 'nullable|numeric',
+            'realisasi_x'         => 'nullable|numeric|min:0',
+            'realisasi_y'         => 'nullable|numeric|min:0',
+            'output_data'         => 'nullable|array',
+            'output_data.*.volume'  => 'nullable|numeric',
             'output_data.*.progres' => 'nullable|numeric|between:0,100',
         ]);
 
@@ -136,7 +155,11 @@ class RealisasiController extends Controller
 
         $realisasi = Realisasi::updateOrCreate(
             ['indikator_id' => $indikatorId, 'triwulan' => $tw],
-            ['realisasi_kumulatif' => $validated['realisasi_kumulatif']]
+            [
+                'realisasi_kumulatif' => $validated['realisasi_kumulatif'],
+                'realisasi_x'         => $validated['realisasi_x'] ?? null,
+                'realisasi_y'         => $validated['realisasi_y'] ?? null,
+            ]
         );
 
         // Save Output Realisasis

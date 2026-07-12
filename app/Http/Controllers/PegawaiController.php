@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pegawai;
 use App\Imports\PegawaiImport;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 
@@ -91,24 +92,30 @@ class PegawaiController extends Controller
             return redirect()->back()->with('error', 'Pegawai tidak memiliki email BPS. Harap update data email terlebih dahulu.');
         }
 
+        // Generate password acak yang aman (bukan 'password')
+        $plainPassword = Str::random(12);
+
         $user = \App\Models\User::updateOrCreate(
             ['email' => $pegawai->email_bps],
             [
-                'name' => $pegawai->nama,
-                'password' => \Illuminate\Support\Facades\Hash::make('password'),
-                'role' => 'pegawai',
+                'name'       => $pegawai->nama,
+                'password'   => \Illuminate\Support\Facades\Hash::make($plainPassword),
+                'role'       => 'pegawai',
                 'pegawai_id' => $pegawai->id
             ]
         );
 
+        $message = "Akun untuk {$pegawai->nama} berhasil diaktifkan. Password: {$plainPassword} (Mohon segera informasikan ke pegawai dan minta untuk segera mengganti password).";
+
         if (request()->ajax()) {
             return response()->json([
-                'status' => 'success',
-                'message' => "Akun untuk {$pegawai->nama} berhasil diaktifkan. Password default: password"
+                'status'   => 'success',
+                'message'  => $message,
+                'password' => $plainPassword, // Hanya untuk ditampilkan sekali ke Admin
             ]);
         }
 
-        return redirect()->back()->with('success', "Akun untuk {$pegawai->nama} berhasil diaktifkan. Password default: password");
+        return redirect()->back()->with('success', $message);
     }
 
     public function destroy(Pegawai $pegawai)

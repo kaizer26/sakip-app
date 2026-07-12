@@ -12,6 +12,8 @@ class OutputMaster extends Model
     protected $fillable = [
         'indikator_id',
         'nama_output',
+        'penjelasan_ro',
+        'target_volume',
         'jenis_output',
         'periode',
         'is_achieved',

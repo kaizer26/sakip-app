@@ -5,14 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Target extends Model
+class TabelRo extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'indikator_id', 'target_tw1', 'target_tw2', 'target_tw3', 'target_tw4',
-        'target_x_tw1', 'target_x_tw2', 'target_x_tw3', 'target_x_tw4',
-        'target_y_tw1', 'target_y_tw2', 'target_y_tw3', 'target_y_tw4'
+        'indikator_id',
+        'tahun',
+        'triwulan',
+        'ro',
+        'realisasi_volume_ro',
+        'progres_ro',
+        'pagu_awal',
+        'pagu_revisi',
+        'pagu_sisa',
+        'pagu_realisasi',
     ];
 
     public function indikator()

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Indikator;
+use App\Models\IndikatorMedia;
 use App\Http\Requests\IndikatorRequest;
 use App\Imports\IndikatorImport;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 
@@ -154,5 +156,67 @@ class IndikatorController extends Controller
             public function __construct($headers) { $this->headers = $headers; }
             public function array(): array { return [$this->headers]; }
         }, 'template_import_indikator.xlsx');
+    }
+
+    /**
+     * Simpan konten rich-text: basis_data, dasar_hitung, definisi_x, definisi_y.
+     */
+    public function updateRichContent(Request $request, Indikator $indikator)
+    {
+        $user = auth()->user();
+        if (!$user->isAdmin() && $indikator->pic_id != $user->pegawai_id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'basis_data'   => 'nullable|string',
+            'dasar_hitung' => 'nullable|string',
+            'definisi_x'   => 'nullable|string|max:500',
+            'definisi_y'   => 'nullable|string|max:500',
+        ]);
+
+        $indikator->update($validated);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Konten berhasil disimpan',
+        ]);
+    }
+
+    /**
+     * Upload foto/media untuk disematkan ke dalam rich-text editor.
+     * Return URL foto yang bisa langsung digunakan oleh Quill.js.
+     */
+    public function uploadMedia(Request $request, Indikator $indikator)
+    {
+        $user = auth()->user();
+        if (!$user->isAdmin() && $indikator->pic_id != $user->pegawai_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'file'  => 'required|file|mimes:jpg,jpeg,png,gif,webp,pdf|max:10240',
+            'field' => 'required|in:basis_data,dasar_hitung',
+        ]);
+
+        $file     = $request->file('file');
+        $field    = $request->input('field');
+        $path     = $file->store("indikator_media/{$indikator->id}", 'public');
+
+        // Simpan metadata media ke tabel indikator_media
+        $media = IndikatorMedia::create([
+            'indikator_id'  => $indikator->id,
+            'field'         => $field,
+            'file_path'     => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'mime_type'     => $file->getMimeType(),
+            'file_size'     => $file->getSize(),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'url'    => asset('storage/' . $path),
+            'id'     => $media->id,
+        ]);
     }
 }

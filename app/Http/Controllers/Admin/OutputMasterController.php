@@ -79,10 +79,12 @@ class OutputMasterController extends Controller
                     }
                 },
             ],
-            'nama_output' => 'required|string',
-            'jenis_output' => 'required|in:Laporan,Publikasi',
-            'periode' => 'required|in:Tahunan,Triwulanan,Bulanan',
-            'file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:51200',
+            'nama_output'    => 'required|string',
+            'penjelasan_ro'  => 'nullable|string',
+            'target_volume'  => 'nullable|numeric|min:0',
+            'jenis_output'   => 'required|in:Laporan,Publikasi',
+            'periode'        => 'required|in:Tahunan,Triwulanan,Bulanan',
+            'file'           => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:51200',
         ]);
 
         if ($request->hasFile('file')) {
@@ -129,10 +131,12 @@ class OutputMasterController extends Controller
                     }
                 },
             ],
-            'nama_output' => 'required|string',
-            'jenis_output' => 'required|in:Laporan,Publikasi',
-            'periode' => 'required|in:Tahunan,Triwulanan,Bulanan',
-            'file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:51200',
+            'nama_output'    => 'required|string',
+            'penjelasan_ro'  => 'nullable|string',
+            'target_volume'  => 'nullable|numeric|min:0',
+            'jenis_output'   => 'required|in:Laporan,Publikasi',
+            'periode'        => 'required|in:Tahunan,Triwulanan,Bulanan',
+            'file'           => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:51200',
         ]);
 
         if ($request->hasFile('file')) {

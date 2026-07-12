@@ -216,6 +216,38 @@
                                             @endforeach
                                         </select>
                                     </div>
+                                    {{-- Definisi X & Y --}}
+                                    <div class="col-12">
+                                        <div class="p-3 rounded-3 border border-primary-subtle bg-primary bg-opacity-5">
+                                            <div class="small fw-bold text-primary mb-2">
+                                                <i class="fas fa-calculator me-1"></i> Formula Dasar Hitung (Opsional)
+                                            </div>
+                                            <div class="form-text text-muted mb-2">
+                                                Definisikan variabel X (pembilang) dan Y (penyebut) untuk formula capaian.
+                                                Capaian = (X / Y) &times; 100%
+                                            </div>
+                                            <div class="row g-2">
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-bold small">
+                                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle me-1">X</span>
+                                                        Deskripsi Pembilang (X)
+                                                    </label>
+                                                    <input type="text" name="definisi_x" id="definisi_x"
+                                                        class="form-control form-control-sm rounded-3 shadow-none border-light-subtle"
+                                                        placeholder="Misal: Jumlah Publikasi yang berkualitas">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-bold small">
+                                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle me-1">Y</span>
+                                                        Deskripsi Penyebut (Y)
+                                                    </label>
+                                                    <input type="text" name="definisi_y" id="definisi_y"
+                                                        class="form-control form-control-sm rounded-3 shadow-none border-light-subtle"
+                                                        placeholder="Misal: Jumlah seluruh Publikasi yang dihasilkan">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="mt-3 text-end">
                                     <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm" id="btnSimpan"><i class="fas fa-save me-1"></i> Simpan Metadata</button>
@@ -251,6 +283,37 @@
                                             <input type="number" step="0.01" name="target_tw4" id="target_tw4" class="form-control rounded-3 border-light-subtle">
                                         </div>
                                     </div>
+                                    
+                                    {{-- Target X dan Y (Akan di-toggle via JS jika ada definisi X/Y) --}}
+                                    <div id="targetXYSection" class="mt-4 pt-3 border-top" style="display: none;">
+                                        <div class="small fw-bold text-primary mb-3">
+                                            <i class="fas fa-calculator me-1"></i> Target X & Y (Berdasarkan Definisi Dasar Hitung)
+                                        </div>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="p-2 border rounded-3 bg-light">
+                                                    <label class="form-label fw-bold small text-primary mb-2">
+                                                        <span class="badge bg-primary text-white me-1">X</span> Target TW I - IV
+                                                    </label>
+                                                    <input type="number" step="0.01" name="target_x_tw1" id="target_x_tw1" class="form-control form-control-sm mb-2" placeholder="Target X TW I">
+                                                    <input type="number" step="0.01" name="target_x_tw2" id="target_x_tw2" class="form-control form-control-sm mb-2" placeholder="Target X TW II">
+                                                    <input type="number" step="0.01" name="target_x_tw3" id="target_x_tw3" class="form-control form-control-sm mb-2" placeholder="Target X TW III">
+                                                    <input type="number" step="0.01" name="target_x_tw4" id="target_x_tw4" class="form-control form-control-sm" placeholder="Target X TW IV">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="p-2 border rounded-3 bg-light">
+                                                    <label class="form-label fw-bold small text-secondary mb-2">
+                                                        <span class="badge bg-secondary text-white me-1">Y</span> Target TW I - IV
+                                                    </label>
+                                                    <input type="number" step="0.01" name="target_y_tw1" id="target_y_tw1" class="form-control form-control-sm mb-2" placeholder="Target Y TW I">
+                                                    <input type="number" step="0.01" name="target_y_tw2" id="target_y_tw2" class="form-control form-control-sm mb-2" placeholder="Target Y TW II">
+                                                    <input type="number" step="0.01" name="target_y_tw3" id="target_y_tw3" class="form-control form-control-sm mb-2" placeholder="Target Y TW III">
+                                                    <input type="number" step="0.01" name="target_y_tw4" id="target_y_tw4" class="form-control form-control-sm" placeholder="Target Y TW IV">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="mt-3 text-end">
                                     <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm" id="btnSimpanTarget"><i class="fas fa-save me-1"></i> Simpan Target</button>
@@ -267,6 +330,11 @@
                                     <div class="col-12">
                                         <label class="form-label fw-bold small">Dasar Hitung & Basis Data Realisasi IKU</label>
                                         <textarea name="dasar_hitung" id="tautan_dasar_hitung" class="form-control rounded-3 shadow-none border-light-subtle tinymce-editor" rows="3" placeholder="Jelaskan dasar perhitungan..."></textarea>
+                                        <div class="form-text text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Untuk konten lebih lengkap (foto, rumus), gunakan editor di halaman
+                                            <a href="javascript:void(0)" id="linkKeBukti" class="text-primary fw-bold">Input Realisasi &rarr; Tab Dasar Hitung</a>.
+                                        </div>
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label fw-bold small">Tautan Bukti Dukung Kinerja</label>
@@ -291,7 +359,7 @@
             </div>
         </div>
     </div>
-    <!-- Modal Tambah Indikator (Specifically for Adding) -->
+    <!-- Modal Tambah Indikator -->
     <div class="modal fade" id="modalIndikator" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4">
@@ -336,6 +404,32 @@
                                         <option value="{{ $p->id }}">{{ $p->nama }} ({{ $p->nip }})</option>
                                     @endforeach
                                 </select>
+                            </div>
+                            {{-- Definisi X & Y --}}
+                            <div class="col-12">
+                                <div class="p-3 rounded-3 border border-primary-subtle bg-primary bg-opacity-5">
+                                    <div class="small fw-bold text-primary mb-1">
+                                        <i class="fas fa-calculator me-1"></i> Formula Dasar Hitung <span class="fw-normal text-muted">(opsional, dapat diisi nanti)</span>
+                                    </div>
+                                    <div class="row g-2 mt-1">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">
+                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle me-1">X</span>
+                                                Deskripsi Pembilang
+                                            </label>
+                                            <input type="text" name="definisi_x" class="form-control form-control-sm rounded-3"
+                                                placeholder="Misal: Jumlah Publikasi berkualitas">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle me-1">Y</span>
+                                                Deskripsi Penyebut
+                                            </label>
+                                            <input type="text" name="definisi_y" class="form-control form-control-sm rounded-3"
+                                                placeholder="Misal: Jumlah seluruh Publikasi">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -402,6 +496,9 @@
                     $('#target_tahunan').val(data.target_tahunan);
                     $('#tahun').val(data.tahun);
                     $('#pic_id').val(data.pic_id).trigger('change');
+                    // Fill Definisi X/Y
+                    $('#definisi_x').val(data.definisi_x || '');
+                    $('#definisi_y').val(data.definisi_y || '');
 
                     // Fill Tautan
                     $('#tautan_dasar_hitung').val(data.dasar_hitung || '');
@@ -409,6 +506,16 @@
                     $('#link_bukti_kinerja').val(data.link_bukti_kinerja || '');
                     $('#link_bukti_tindak_lanjut').val(data.link_bukti_tindak_lanjut || '');
                     $('#penjelasan_lainnya').val(data.penjelasan_lainnya || '');
+
+                    // Update link ke halaman entry realisasi
+                    $('#linkKeBukti').attr('href', `{{ url('realisasi/entry') }}/${data.kode}`);
+                    
+                    // Kondisi Show/Hide Target X/Y
+                    if (data.definisi_x || data.definisi_y) {
+                        $('#targetXYSection').slideDown();
+                    } else {
+                        $('#targetXYSection').hide();
+                    }
                 });
 
                 // Load Target Data via separate show route
@@ -417,6 +524,16 @@
                     $('#target_tw2').val(data.target_tw2);
                     $('#target_tw3').val(data.target_tw3);
                     $('#target_tw4').val(data.target_tw4);
+                    
+                    $('#target_x_tw1').val(data.target_x_tw1);
+                    $('#target_x_tw2').val(data.target_x_tw2);
+                    $('#target_x_tw3').val(data.target_x_tw3);
+                    $('#target_x_tw4').val(data.target_x_tw4);
+                    
+                    $('#target_y_tw1').val(data.target_y_tw1);
+                    $('#target_y_tw2').val(data.target_y_tw2);
+                    $('#target_y_tw3').val(data.target_y_tw3);
+                    $('#target_y_tw4').val(data.target_y_tw4);
                 });
             });
 

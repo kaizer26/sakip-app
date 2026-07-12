@@ -18,6 +18,8 @@ class Aktivitas extends Model
         'tanggal_mulai',
         'tanggal_selesai',
         'uraian',
+        'penjelasan_kegiatan',
+        'realisasi_kegiatan',
         'lampiran',
     ];
 

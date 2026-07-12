@@ -10,14 +10,13 @@ class Realisasi extends Model
     use HasFactory;
 
     protected $fillable = [
-        'indikator_id', 'triwulan', 'realisasi_kumulatif'
+        'indikator_id', 'triwulan', 'realisasi_kumulatif',
+        'realisasi_x', 'realisasi_y',
     ];
 
-    public function realisasis()
-    {
-        return $this->hasMany(RealisasiLog::class);
-    }
-
+    /**
+     * Audit log perubahan nilai realisasi.
+     */
     public function logs()
     {
         return $this->hasMany(RealisasiLog::class);
@@ -37,4 +36,16 @@ class Realisasi extends Model
         if ($targetVal == 0) return 0;
         return ($this->realisasi_kumulatif / $targetVal) * 100;
     }
+
+    /**
+     * Capaian berbasis X/Y jika tersedia.
+     */
+    public function getCapaianXyAttribute(): ?float
+    {
+        if ($this->realisasi_y && $this->realisasi_y > 0) {
+            return round(($this->realisasi_x / $this->realisasi_y) * 100, 2);
+        }
+        return null;
+    }
 }
+

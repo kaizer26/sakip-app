@@ -25,6 +25,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('indikator/template', [IndikatorController::class, 'downloadTemplate'])->name('indikator.template');
     Route::resource('indikator', IndikatorController::class);
     Route::post('indikator/{indikator}/tautan', [IndikatorController::class, 'updateTautan'])->name('indikator.tautan');
+    Route::post('indikator/{indikator}/rich-content', [IndikatorController::class, 'updateRichContent'])->name('indikator.rich-content');
+    Route::post('indikator/{indikator}/media', [IndikatorController::class, 'uploadMedia'])->name('indikator.media');
     
     Route::resource('pegawai', PegawaiController::class);
     Route::post('pegawai/{id}/activate', [PegawaiController::class, 'activateAccount'])->name('pegawai.activate');
@@ -46,6 +48,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('target/{id}', [TargetController::class, 'show'])->name('target.show');
     Route::put('target/{id}', [TargetController::class, 'update'])->name('target.update');
     
+    // Template Word
+    Route::get('/template-word', [App\Http\Controllers\TemplateWordController::class, 'index'])->name('template.word.index');
+    Route::post('/template-word/export-notulen', [App\Http\Controllers\TemplateWordController::class, 'exportNotulenCapaian'])->name('template.word.export.notulen');
+
+    // Master RO
+    Route::resource('tabel-ro', App\Http\Controllers\TabelRoController::class)->except(['show']);
+
     Route::resource('realisasi', RealisasiController::class)->except(['show']);
     Route::get('admin/aktivitas', [App\Http\Controllers\Admin\AktivitasController::class, 'index'])->name('admin.aktivitas.index');
     Route::get('admin/aktivitas/{aktivitas}/edit', [App\Http\Controllers\Admin\AktivitasController::class, 'edit'])->name('admin.aktivitas.edit');

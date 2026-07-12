@@ -26,7 +26,12 @@ class TargetController extends Controller
         
         // Sanitasi input: ubah koma menjadi titik untuk desimal
         $data = $request->all();
-        foreach(['target_tw1', 'target_tw2', 'target_tw3', 'target_tw4'] as $field) {
+        $fieldsToSanitize = [
+            'target_tw1', 'target_tw2', 'target_tw3', 'target_tw4',
+            'target_x_tw1', 'target_x_tw2', 'target_x_tw3', 'target_x_tw4',
+            'target_y_tw1', 'target_y_tw2', 'target_y_tw3', 'target_y_tw4'
+        ];
+        foreach($fieldsToSanitize as $field) {
             if (isset($data[$field])) {
                 $data[$field] = str_replace(',', '.', $data[$field]);
             }
@@ -38,6 +43,14 @@ class TargetController extends Controller
             'target_tw2' => 'nullable|numeric',
             'target_tw3' => 'nullable|numeric',
             'target_tw4' => 'nullable|numeric',
+            'target_x_tw1' => 'nullable|numeric',
+            'target_x_tw2' => 'nullable|numeric',
+            'target_x_tw3' => 'nullable|numeric',
+            'target_x_tw4' => 'nullable|numeric',
+            'target_y_tw1' => 'nullable|numeric',
+            'target_y_tw2' => 'nullable|numeric',
+            'target_y_tw3' => 'nullable|numeric',
+            'target_y_tw4' => 'nullable|numeric',
         ]));
 
         if ($request->ajax()) {

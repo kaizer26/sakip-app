@@ -80,14 +80,16 @@ class PublicInputController extends Controller
         $pegawai = $user->pegawai;
 
         $validated = $request->validate([
-            'indikator_id' => 'required|exists:indikators,id',
-            'kegiatan_id' => 'required|exists:kegiatan_masters,id',
-            'triwulan' => 'required|integer|between:1,4',
-            'tahapan' => 'required|string',
-            'tanggal_mulai' => 'required|date',
-            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-            'uraian' => 'required|string',
-            'lampiran.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,csv|max:10240',
+            'indikator_id'        => 'required|exists:indikators,id',
+            'kegiatan_id'         => 'required|exists:kegiatan_masters,id',
+            'triwulan'            => 'required|integer|between:1,4',
+            'tahapan'             => 'required|string',
+            'tanggal_mulai'       => 'required|date',
+            'tanggal_selesai'     => 'required|date|after_or_equal:tanggal_mulai',
+            'uraian'              => 'required|string',
+            'penjelasan_kegiatan' => 'nullable|string',
+            'realisasi_kegiatan'  => 'nullable|string',
+            'lampiran.*'          => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,csv|max:10240',
         ]);
 
         $paths = [];
@@ -98,15 +100,17 @@ class PublicInputController extends Controller
         }
 
         \App\Models\Aktivitas::create([
-            'indikator_id' => $validated['indikator_id'],
-            'kegiatan_id' => $validated['kegiatan_id'],
-            'pegawai_nip' => $pegawai->nip ?? $pegawai->email_bps,
-            'triwulan' => $validated['triwulan'],
-            'tahapan' => $validated['tahapan'],
-            'tanggal_mulai' => $validated['tanggal_mulai'],
-            'tanggal_selesai' => $validated['tanggal_selesai'],
-            'uraian' => $validated['uraian'],
-            'lampiran' => $paths,
+            'indikator_id'        => $validated['indikator_id'],
+            'kegiatan_id'         => $validated['kegiatan_id'],
+            'pegawai_nip'         => $pegawai->nip ?? $pegawai->email_bps,
+            'triwulan'            => $validated['triwulan'],
+            'tahapan'             => $validated['tahapan'],
+            'tanggal_mulai'       => $validated['tanggal_mulai'],
+            'tanggal_selesai'     => $validated['tanggal_selesai'],
+            'uraian'              => $validated['uraian'],
+            'penjelasan_kegiatan' => $validated['penjelasan_kegiatan'] ?? null,
+            'realisasi_kegiatan'  => $validated['realisasi_kegiatan'] ?? null,
+            'lampiran'            => $paths,
         ]);
 
         return redirect()->back()->with('success', 'Aktivitas berhasil dicatat.');

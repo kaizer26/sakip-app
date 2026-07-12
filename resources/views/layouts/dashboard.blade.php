@@ -12,7 +12,6 @@
 
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
@@ -479,6 +478,16 @@
                         class="nav-link {{ request()->routeIs('pegawai.*') ? 'active' : '' }}"
                         data-title="Master Pegawai">
                         <i class="fas fa-users-gear"></i> <span class="link-text">Master Pegawai</span>
+                    </a>
+                    <a href="{{ route('tabel-ro.index') }}"
+                        class="nav-link {{ request()->routeIs('tabel-ro.*') ? 'active' : '' }}"
+                        data-title="Master RO">
+                        <i class="fas fa-list-check"></i> <span class="link-text">Master RO</span>
+                    </a>
+                    <a href="{{ route('template.word.index') }}"
+                        class="nav-link {{ request()->routeIs('template.word.*') ? 'active' : '' }}"
+                        data-title="Template Word">
+                        <i class="fas fa-file-word"></i> <span class="link-text">Template Word</span>
                     </a>
                     <a href="{{ route('analisis.index') }}"
                         class="nav-link {{ request()->routeIs('analisis.*') ? 'active' : '' }}"
