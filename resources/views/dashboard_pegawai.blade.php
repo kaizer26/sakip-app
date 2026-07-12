@@ -243,11 +243,19 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <div class="alert alert-primary border-0 shadow-sm rounded-3 mb-4 d-flex align-items-center">
-                    <i class="fas fa-user-check me-3 fs-5"></i>
-                    <div>Melaporkan sebagai: <strong>{{ auth()->user()->name }}</strong></div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold mb-1">Pilih Pegawai (PIC)</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-primary bg-opacity-10 text-primary border-primary-subtle"><i class="fas fa-user-check"></i></span>
+                        <select name="pegawai_nip" class="form-select border-primary-subtle" required>
+                            @foreach($pegawais as $p)
+                                <option value="{{ $p->nip ?? $p->email_bps }}" {{ (auth()->user()->pegawai->nip ?? '') == $p->nip ? 'selected' : '' }}>
+                                    {{ $p->nama }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
-
                 <div class="mb-3" id="tahapan_wrapper">
                     <label class="form-label small fw-bold mb-1">Tahap yang Sedang Dikerjakan</label>
                     <select name="tahapan" id="tahapan_select" class="form-select select2-modal" required>
@@ -296,11 +304,19 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-4 d-flex align-items-center bg-danger bg-opacity-10 text-danger">
-                    <i class="fas fa-user-ninja me-3 fs-5"></i>
-                    <div>Melaporkan sebagai: <strong>{{ auth()->user()->name }}</strong></div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold mb-1">Pilih Pegawai (PIC)</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-danger bg-opacity-10 text-danger border-danger-subtle"><i class="fas fa-user-ninja"></i></span>
+                        <select name="pegawai_nip" class="form-select border-danger-subtle" required>
+                            @foreach($pegawais as $p)
+                                <option value="{{ $p->nip ?? $p->email_bps }}" {{ (auth()->user()->pegawai->nip ?? '') == $p->nip ? 'selected' : '' }}>
+                                    {{ $p->nama }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
-
                 <div class="mb-3">
                     <label class="form-label small fw-bold mb-1">Kendala yang Dihadapi</label>
                     <textarea name="kendala" class="form-control rounded-3" rows="3" placeholder="Jelaskan hambatan secara spesifik..." required></textarea>
@@ -469,6 +485,9 @@
                     $batasDate.prop('readonly', false);
                     
                     try {
+                        // Tambahkan nama Ketua Tim sendiri sebagai opsi
+                        $picS.append($('<option></option>').attr('value', currentUserName).text(currentUserName + " (Ketua Tim)"));
+                        
                         const anggotas = JSON.parse($selectedKeg.attr('data-anggotas'));
                         anggotas.forEach(a => $picS.append($('<option></option>').attr('value', a.nama).text(a.nama)));
                     } catch(e) { console.error("Error parsing anggotas", e); }

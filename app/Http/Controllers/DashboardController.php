@@ -61,6 +61,8 @@ class DashboardController extends Controller
                     ->where('tahun', $tahun)
                     ->with(['target', 'realisasis'])
                     ->get();
+                    
+                $pegawais = \App\Models\Pegawai::orderBy('nama')->get();
             }
 
             $summary = [
@@ -77,6 +79,7 @@ class DashboardController extends Controller
                 'tahun' => $tahun,
                 'triwulan' => $triwulan,
                 'pegawai' => $pegawai,
+                'pegawais' => $pegawais ?? collect(),
                 'error' => !$pegawai ? 'Data profil pegawai Anda belum ditautkan oleh Admin.' : null
             ]);
         }

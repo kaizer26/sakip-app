@@ -16,16 +16,19 @@ class IndikatorImport implements ToModel, WithHeadingRow
     public function model(array $row)
     {
         return new Indikator([
-            'kode'              => $row['kode'],
-            'tujuan'            => $row['tujuan'],
-            'sasaran'           => $row['sasaran'],
-            'indikator_kinerja' => $row['indikator_kinerja'],
-            'jenis_indikator'   => $row['jenis_indikator'],
-            'periode'           => $row['periode'],
-            'tipe'              => $row['tipe'],
-            'satuan'            => $row['satuan'],
-            'target_tahunan'    => $row['target_tahunan'] ?? 0,
-            'tahun'             => $row['tahun'] ?? 2026,
+            'kode'                   => $row['kode'],
+            'kode_tujuan'            => $row['kode_tujuan'] ?? null,
+            'tujuan'                 => $row['tujuan'],
+            'kode_sasaran'           => $row['kode_sasaran'] ?? null,
+            'sasaran'                => $row['sasaran'],
+            'kode_indikator_kinerja' => $row['kode_indikator_kinerja'] ?? null,
+            'indikator_kinerja'      => $row['indikator_kinerja'],
+            'jenis_indikator'        => $row['jenis_indikator'],
+            'periode'                => $row['periode'],
+            'tipe'                   => $row['tipe'],
+            'satuan'                 => $row['satuan'],
+            'target_tahunan'         => $row['target_tahunan'] ?? 0,
+            'tahun'                  => $row['tahun'] ?? 2026,
         ]);
     }
 }

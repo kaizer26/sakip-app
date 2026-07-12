@@ -17,7 +17,12 @@ class RealisasiExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'No', 'Indikator Kinerja', 'Satuan', 'Triwulan', 
+            'No', 
+            'Kode Tujuan', 
+            'Kode Sasaran', 
+            'Kode Indikator Kinerja', 
+            'Indikator Kinerja', 
+            'Satuan', 'Triwulan', 
             'Target Triwulan', 'Realisasi Kumulatif', 'Capaian (%)'
         ];
     }
@@ -30,6 +35,9 @@ class RealisasiExport implements FromCollection, WithHeadings, WithMapping
 
         return [
             $no++,
+            $realisasi->indikator->kode_tujuan,
+            $realisasi->indikator->kode_sasaran,
+            $realisasi->indikator->kode_indikator_kinerja,
             $realisasi->indikator->indikator_kinerja,
             $realisasi->indikator->satuan,
             'TW ' . $realisasi->triwulan,

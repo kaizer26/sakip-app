@@ -20,26 +20,36 @@ class PasswordResetLinkController extends Controller
     }
 
     /**
-     * Handle an incoming password reset link request.
-     *
-     * @throws ValidationException
+     * Handle checking email and resetting password.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|View
     {
         $request->validate([
             'email' => ['required', 'email'],
         ]);
 
-        // We will send the password reset link to this user. Once we have attempted
-        // to send the link, we will examine the response then see the message we
-        // need to show to the user. Finally, we'll send out a proper response.
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        $user = \App\Models\User::where('email', $request->email)->first();
 
-        return $status == Password::RESET_LINK_SENT
-                    ? back()->with('status', __($status))
-                    : back()->withInput($request->only('email'))
-                        ->withErrors(['email' => __($status)]);
+        if (!$user) {
+            return back()->withErrors(['email' => 'Email tidak ditemukan di sistem.']);
+        }
+
+        if ($request->has('password')) {
+            $request->validate([
+                'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
+            ]);
+
+            $user->forceFill([
+                'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+                'remember_token' => \Illuminate\Support\Str::random(60),
+            ])->save();
+
+            return redirect()->route('login')->with('status', 'Password Anda berhasil diperbarui. Silakan login.');
+        }
+
+        return view('auth.forgot-password', [
+            'email' => $request->email,
+            'email_verified' => true
+        ]);
     }
 }

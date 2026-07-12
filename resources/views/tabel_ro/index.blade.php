@@ -12,9 +12,23 @@
             <p class="text-muted small mb-0 mt-1">Kelola data RO, Realisasi, dan Pagu Anggaran.</p>
         </div>
         <div class="col-md-6 text-md-end mt-3 mt-md-0">
-            <a href="{{ route('tabel-ro.create') }}" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                <i class="fas fa-plus me-1"></i> Tambah RO Baru
-            </a>
+            <div class="d-inline-flex flex-wrap align-items-center justify-content-md-end gap-2">
+                <a href="{{ route('tabel-ro.create') }}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="fas fa-plus me-1"></i> Tambah RO Baru
+                </a>
+                <a href="{{ route('tabel-ro.template') }}" class="btn btn-outline-success rounded-pill px-3 fw-bold">
+                    <i class="fas fa-download me-1"></i> Template
+                </a>
+                <form action="{{ route('tabel-ro.import') }}" method="POST" enctype="multipart/form-data" class="d-inline-flex align-items-center">
+                    @csrf
+                    <div class="input-group input-group-sm">
+                        <input type="file" name="file" class="form-control rounded-start-pill border-success" style="width: 150px;" required>
+                        <button type="submit" class="btn btn-success rounded-end-pill px-3">
+                            <i class="fas fa-upload me-1"></i> Import
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 

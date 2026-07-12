@@ -38,7 +38,7 @@ class OutputMasterController extends Controller
         }
 
         $outputs = $query->get();
-        $indikators = Indikator::all();
+        $indikators = Indikator::orderBy('kode')->get();
 
         // Filter: Admin sees all, PIC Indikator sees outputs and indicators they responsible for
         if (!auth()->user()->isAdmin()) {
@@ -52,7 +52,9 @@ class OutputMasterController extends Controller
                           ->orWhereHas('anggotas', function($sq) use ($pegawaiId) {
                               $sq->where('pegawai_id', $pegawaiId);
                           });
-                    })->get();
+                    })
+                    ->orderBy('kode')
+                    ->get();
             } else {
                 $indikators = collect();
             }

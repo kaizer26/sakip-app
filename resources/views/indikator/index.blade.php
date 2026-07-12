@@ -56,9 +56,18 @@
                                 <td>{{ $loop->iteration }}</td>
                                 <td class="small fw-bold text-primary">{{ $i->kode ?: '-' }}</td>
                                 <td>
-                                    <div class="fw-bold text-dark mb-1">{{ $i->indikator_kinerja }}</div>
+                                    <div class="fw-bold text-dark mb-1">
+                                        @if($i->kode_indikator_kinerja)
+                                            <span class="text-primary me-1">[{{ $i->kode_indikator_kinerja }}]</span>
+                                        @endif
+                                        {{ $i->indikator_kinerja }}
+                                    </div>
                                     <div class="small text-muted" style="font-size: 0.75rem;"><i
-                                            class="fas fa-crosshairs me-1 text-secondary"></i>{{ $i->sasaran }}</div>
+                                            class="fas fa-crosshairs me-1 text-secondary"></i>
+                                        @if($i->kode_sasaran)
+                                            <span class="fw-semibold me-1">[{{ $i->kode_sasaran }}]</span>
+                                        @endif
+                                        {{ $i->sasaran }}</div>
                                 </td>
                                 <td>
                                     <span
@@ -94,11 +103,7 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center align-items-center gap-2">
-                                        <a href="{{ route('realisasi.entry', $i) }}"
-                                            class="btn btn-sm btn-outline-success rounded-3 d-flex align-items-center justify-content-center" 
-                                            style="width: 32px; height: 32px;" title="Input Progress">
-                                            <i class="fas fa-chart-line"></i>
-                                        </a>
+
                                         @if(auth()->user()->isAdmin() || $i->pic_id == auth()->user()->pegawai_id)
                                             <button class="btn btn-sm btn-primary rounded-3 manage-indikator d-flex align-items-center justify-content-center"
                                                 style="width: 32px; height: 32px;"
@@ -157,11 +162,23 @@
                                 <input type="hidden" name="_method" id="formMethod" value="POST">
                                 <input type="hidden" id="indikator_id">
                                 <div class="row g-2">
-                                    <div class="col-md-4">
-                                        <label class="form-label fw-bold small">Kode Indikator</label>
-                                        <input type="text" name="kode" id="kode" class="form-control form-control-sm rounded-3 shadow-none border-light-subtle" placeholder="Contoh: 1.1.1">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold small">Kode Route (Key)</label>
+                                        <input type="text" name="kode" id="kode" class="form-control form-control-sm rounded-3 shadow-none border-light-subtle" placeholder="Contoh: 1.1.1.1" required>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold small">Kode Tujuan</label>
+                                        <input type="text" name="kode_tujuan" id="kode_tujuan" class="form-control form-control-sm rounded-3 shadow-none border-light-subtle" placeholder="Contoh: T1">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold small">Kode Sasaran</label>
+                                        <input type="text" name="kode_sasaran" id="kode_sasaran" class="form-control form-control-sm rounded-3 shadow-none border-light-subtle" placeholder="Contoh: 1.1.1">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold small">Kode Indikator Kinerja</label>
+                                        <input type="text" name="kode_indikator_kinerja" id="kode_indikator_kinerja" class="form-control form-control-sm rounded-3 shadow-none border-light-subtle" placeholder="Contoh: 1.1.1.1">
+                                    </div>
+                                    <div class="col-md-6">
                                         <label class="form-label fw-bold small">Jenis</label>
                                         <select name="jenis_indikator" id="jenis_indikator" class="form-select form-select-sm rounded-3 shadow-none border-light-subtle" required>
                                             <option value="" disabled selected>-- Pilih Jenis --</option>
@@ -170,7 +187,7 @@
                                             <option value="IK">IK</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-bold small">Tahun</label>
                                         <input type="number" name="tahun" id="tahun" class="form-control form-control-sm rounded-3 shadow-none border-light-subtle" required>
                                     </div>
@@ -218,8 +235,8 @@
                                     </div>
                                     {{-- Definisi X & Y --}}
                                     <div class="col-12">
-                                        <div class="p-3 rounded-3 border border-primary-subtle bg-primary bg-opacity-5">
-                                            <div class="small fw-bold text-primary mb-2">
+                                        <div class="p-3 rounded-3 border border-secondary-subtle bg-light">
+                                            <div class="small fw-bold text-dark mb-2">
                                                 <i class="fas fa-calculator me-1"></i> Formula Dasar Hitung (Opsional)
                                             </div>
                                             <div class="form-text text-muted mb-2">
@@ -229,7 +246,7 @@
                                             <div class="row g-2">
                                                 <div class="col-md-6">
                                                     <label class="form-label fw-bold small">
-                                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle me-1">X</span>
+                                                        <span class="badge bg-secondary text-white me-1">X</span>
                                                         Deskripsi Pembilang (X)
                                                     </label>
                                                     <input type="text" name="definisi_x" id="definisi_x"
@@ -238,7 +255,7 @@
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="form-label fw-bold small">
-                                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle me-1">Y</span>
+                                                        <span class="badge bg-secondary text-white me-1">Y</span>
                                                         Deskripsi Penyebut (Y)
                                                     </label>
                                                     <input type="text" name="definisi_y" id="definisi_y"
@@ -336,18 +353,6 @@
                                             <a href="javascript:void(0)" id="linkKeBukti" class="text-primary fw-bold">Input Realisasi &rarr; Tab Dasar Hitung</a>.
                                         </div>
                                     </div>
-                                    <div class="col-12">
-                                        <label class="form-label fw-bold small">Tautan Bukti Dukung Kinerja</label>
-                                        <input type="url" name="link_bukti_kinerja" id="link_bukti_kinerja" class="form-control rounded-3 shadow-none border-light-subtle" placeholder="https://...">
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label fw-bold small">Tautan Bukti Dukung Rencana Tindak Lanjut</label>
-                                        <input type="url" name="link_bukti_tindak_lanjut" id="link_bukti_tindak_lanjut" class="form-control rounded-3 shadow-none border-light-subtle" placeholder="https://...">
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label fw-bold small">Penjelasan atau Pembahasan Lainnya</label>
-                                        <textarea name="penjelasan_lainnya" id="penjelasan_lainnya" class="form-control rounded-3 shadow-none border-light-subtle" rows="3" placeholder="Tambahkan penjelasan lainnya..."></textarea>
-                                    </div>
                                 </div>
                                 <div class="mt-4 text-end">
                                     <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm" id="btnSimpanTautan"><i class="fas fa-save me-1"></i> Simpan Tautan</button>
@@ -371,11 +376,23 @@
                     @csrf
                     <div class="modal-body p-4">
                         <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold small">Kode Indikator</label>
-                                <input type="text" name="kode" class="form-control rounded-3 border-light-subtle" placeholder="1.1.1" required>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold small">Kode Route (Key)</label>
+                                <input type="text" name="kode" class="form-control rounded-3 border-light-subtle" placeholder="1.1.1.1" required>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold small">Kode Tujuan</label>
+                                <input type="text" name="kode_tujuan" class="form-control rounded-3 border-light-subtle" placeholder="T1">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold small">Kode Sasaran</label>
+                                <input type="text" name="kode_sasaran" class="form-control rounded-3 border-light-subtle" placeholder="1.1.1">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold small">Kode Indikator Kinerja</label>
+                                <input type="text" name="kode_indikator_kinerja" class="form-control rounded-3 border-light-subtle" placeholder="1.1.1.1">
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label fw-bold small">Jenis</label>
                                 <select name="jenis_indikator" class="form-select rounded-3" required>
                                     <option value="" disabled selected>-- Pilih jenis indikator --</option>
@@ -384,7 +401,7 @@
                                     <option value="IK">IK</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label class="form-label fw-bold small">Tahun</label>
                                 <input type="number" name="tahun" value="{{ date('Y') }}" class="form-control rounded-3" required>
                             </div>
@@ -407,14 +424,14 @@
                             </div>
                             {{-- Definisi X & Y --}}
                             <div class="col-12">
-                                <div class="p-3 rounded-3 border border-primary-subtle bg-primary bg-opacity-5">
-                                    <div class="small fw-bold text-primary mb-1">
+                                <div class="p-3 rounded-3 border border-secondary-subtle bg-light">
+                                    <div class="small fw-bold text-dark mb-1">
                                         <i class="fas fa-calculator me-1"></i> Formula Dasar Hitung <span class="fw-normal text-muted">(opsional, dapat diisi nanti)</span>
                                     </div>
                                     <div class="row g-2 mt-1">
                                         <div class="col-md-6">
                                             <label class="form-label small fw-semibold">
-                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle me-1">X</span>
+                                                <span class="badge bg-secondary text-white me-1">X</span>
                                                 Deskripsi Pembilang
                                             </label>
                                             <input type="text" name="definisi_x" class="form-control form-control-sm rounded-3"
@@ -422,7 +439,7 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-semibold">
-                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle me-1">Y</span>
+                                                <span class="badge bg-secondary text-white me-1">Y</span>
                                                 Deskripsi Penyebut
                                             </label>
                                             <input type="text" name="definisi_y" class="form-control form-control-sm rounded-3"
@@ -487,6 +504,9 @@
                 $.get(`{{ url('indikator') }}/${kode}`, function (data) {
                     // Fill Metadata
                     $('#kode').val(data.kode);
+                    $('#kode_tujuan').val(data.kode_tujuan || '');
+                    $('#kode_sasaran').val(data.kode_sasaran || '');
+                    $('#kode_indikator_kinerja').val(data.kode_indikator_kinerja || '');
                     $('#sasaran').val(data.sasaran);
                     $('#indikator_kinerja').val(data.indikator_kinerja);
                     $('#jenis_indikator').val(data.jenis_indikator);
@@ -503,9 +523,6 @@
                     // Fill Tautan
                     $('#tautan_dasar_hitung').val(data.dasar_hitung || '');
                     tinymce.get('tautan_dasar_hitung')?.setContent(data.dasar_hitung || '');
-                    $('#link_bukti_kinerja').val(data.link_bukti_kinerja || '');
-                    $('#link_bukti_tindak_lanjut').val(data.link_bukti_tindak_lanjut || '');
-                    $('#penjelasan_lainnya').val(data.penjelasan_lainnya || '');
 
                     // Update link ke halaman entry realisasi
                     $('#linkKeBukti').attr('href', `{{ url('realisasi/entry') }}/${data.kode}`);

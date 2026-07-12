@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\TabelRo;
 use App\Models\Indikator;
+use App\Imports\TabelRoImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TabelRoController extends Controller
 {
@@ -25,7 +27,7 @@ class TabelRoController extends Controller
 
     public function create()
     {
-        $indikators = Indikator::orderBy('indikator_kinerja', 'asc')->get();
+        $indikators = Indikator::orderBy('kode', 'asc')->get();
         return view('tabel_ro.create', compact('indikators'));
     }
 
@@ -56,7 +58,7 @@ class TabelRoController extends Controller
 
     public function edit(TabelRo $tabel_ro)
     {
-        $indikators = Indikator::orderBy('indikator_kinerja', 'asc')->get();
+        $indikators = Indikator::orderBy('kode', 'asc')->get();
         return view('tabel_ro.edit', compact('tabel_ro', 'indikators'));
     }
 
@@ -88,5 +90,38 @@ class TabelRoController extends Controller
     {
         $tabel_ro->delete();
         return redirect()->route('tabel-ro.index')->with('success', 'Rincian Output (RO) berhasil dihapus.');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => 'required|mimes:xlsx,xls']);
+        Excel::import(new TabelRoImport, $request->file('file'));
+        return redirect()->route('tabel-ro.index')->with('success', 'Data Master RO berhasil diimport.');
+    }
+
+    public function downloadTemplate()
+    {
+        $headers = [
+            'kode_indikator', 'tahun', 'triwulan', 'ro', 
+            'realisasi_volume_ro', 'progres_ro', 
+            'pagu_awal', 'pagu_revisi', 'pagu_sisa', 'pagu_realisasi'
+        ];
+        
+        $example = [
+            '1.1.1.1', '2026', '1', 'Laporan Kinerja Triwulan I', 
+            '1', '100', '150000000', '150000000', '0', '150000000'
+        ];
+
+        return Excel::download(new class($headers, $example) implements \Maatwebsite\Excel\Concerns\FromArray {
+            protected $headers;
+            protected $example;
+            public function __construct($headers, $example) { 
+                $this->headers = $headers;
+                $this->example = $example;
+            }
+            public function array(): array { 
+                return [$this->headers, $this->example]; 
+            }
+        }, 'template_import_ro.xlsx');
     }
 }

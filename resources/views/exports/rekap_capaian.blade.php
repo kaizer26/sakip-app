@@ -28,12 +28,27 @@
         @foreach($grouped as $tujuan => $sasaranGroups)
             <tr>
                 <td style="border: 1px solid #000;"></td>
-                <td colspan="16" style="background-color: #e9ecef; border: 1px solid #000; font-weight: bold;">{{ $tujuan ?: 'Tanpa Tujuan' }}</td>
+                <td colspan="16" style="background-color: #e9ecef; border: 1px solid #000; font-weight: bold;">
+                    @php
+                        $firstIndInTujuan = null;
+                        foreach($sasaranGroups as $sasGroup) {
+                            $firstIndInTujuan = $sasGroup->first();
+                            if($firstIndInTujuan) break;
+                        }
+                        $kodeTujuan = $firstIndInTujuan ? $firstIndInTujuan->kode_tujuan : null;
+                    @endphp
+                    {{ ($kodeTujuan ? $kodeTujuan . ' - ' : '') . ($tujuan ?: 'Tanpa Tujuan') }}
+                </td>
             </tr>
             @foreach($sasaranGroups as $sasaran => $indicators)
                 <tr>
                     <td style="border: 1px solid #000;"></td>
-                    <td colspan="16" style="border: 1px solid #000; font-weight: bold; padding-left: 20px;">Sasaran: {{ $sasaran ?: 'Tanpa Sasaran' }}</td>
+                    <td colspan="16" style="border: 1px solid #000; font-weight: bold; padding-left: 20px;">
+                        @php
+                            $kodeSasaran = $indicators->first() ? $indicators->first()->kode_sasaran : null;
+                        @endphp
+                        Sasaran: {{ ($kodeSasaran ? $kodeSasaran . ' - ' : '') . ($sasaran ?: 'Tanpa Sasaran') }}
+                    </td>
                 </tr>
                 @foreach($indicators as $i)
                     @php
@@ -44,7 +59,9 @@
                     @endphp
                     <tr>
                         <td style="border: 1px solid #000; text-align: center;">{{ $globalNo++ }}</td>
-                        <td style="border: 1px solid #000;">{{ $i->kode }} - {{ $i->indikator_kinerja }}</td>
+                        <td style="border: 1px solid #000;">
+                            {{ $i->kode_indikator_kinerja ?: $i->kode }} - {{ $i->indikator_kinerja }}
+                        </td>
                         <td style="border: 1px solid #000; text-align: center;">{{ $i->jenis_indikator }}</td>
                         <td style="border: 1px solid #000; text-align: center;">{{ $i->periode }}</td>
                         <td style="border: 1px solid #000; text-align: center;">{{ $i->tipe }}</td>

@@ -473,6 +473,27 @@
                     <span class="link-text">{{ auth()->user()->isAdmin() ? 'Master Output' : 'Output Saya' }}</span>
                 </a>
 
+                <a href="{{ route('capaian-kinerja.index') }}"
+                    class="nav-link {{ request()->routeIs('capaian-kinerja.*') ? 'active' : '' }}"
+                    data-title="Capaian Kinerja">
+                    <i class="fas fa-award"></i>
+                    <span class="link-text">Capaian Kinerja</span>
+                </a>
+
+                <a href="{{ route('monitoring-capaian.index') }}"
+                    class="nav-link {{ request()->routeIs('monitoring-capaian.*') ? 'active' : '' }}"
+                    data-title="Monitoring Capaian">
+                    <i class="fas fa-search-plus"></i>
+                    <span class="link-text">Monitoring Capaian</span>
+                </a>
+
+                <a href="{{ route('riwayat-kendala.index') }}"
+                    class="nav-link {{ request()->routeIs('riwayat-kendala.*') ? 'active' : '' }}"
+                    data-title="Riwayat Kendala">
+                    <i class="fas fa-history"></i>
+                    <span class="link-text">Riwayat Kendala</span>
+                </a>
+
                 @if (auth()->user()->isAdmin())
                     <a href="{{ route('pegawai.index') }}"
                         class="nav-link {{ request()->routeIs('pegawai.*') ? 'active' : '' }}"

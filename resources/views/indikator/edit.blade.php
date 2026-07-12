@@ -11,9 +11,21 @@
                     @csrf
                     @method('PUT')
                     <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label fw-bold">Kode Indikator</label>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-bold">Kode Route (Key)</label>
                             <input type="text" name="kode" class="form-control" value="{{ old('kode', $indikator->kode) }}" placeholder="Contoh: 1.1.1.1">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-bold">Kode Tujuan</label>
+                            <input type="text" name="kode_tujuan" class="form-control" value="{{ old('kode_tujuan', $indikator->kode_tujuan) }}" placeholder="Contoh: T1">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-bold">Kode Sasaran</label>
+                            <input type="text" name="kode_sasaran" class="form-control" value="{{ old('kode_sasaran', $indikator->kode_sasaran) }}" placeholder="Contoh: 1.1">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-bold">Kode Indikator Kinerja</label>
+                            <input type="text" name="kode_indikator_kinerja" class="form-control" value="{{ old('kode_indikator_kinerja', $indikator->kode_indikator_kinerja) }}" placeholder="Contoh: 1.1.1">
                         </div>
                         <div class="col-md-12 mb-3">
                             <label class="form-label fw-bold">Tujuan</label>

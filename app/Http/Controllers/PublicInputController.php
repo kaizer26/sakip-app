@@ -26,6 +26,7 @@ class PublicInputController extends Controller
             'pic_tindak_lanjut' => 'nullable|string',
             'batas_waktu' => 'nullable|date',
             'kegiatan_id' => 'required|exists:kegiatan_masters,id',
+            'pegawai_nip' => 'required|string',
         ]);
 
         $kegiatan = \App\Models\KegiatanMaster::find($validated['kegiatan_id']);
@@ -33,7 +34,7 @@ class PublicInputController extends Controller
 
         Analisis::create([
             'indikator_id' => $validated['indikator_id'],
-            'pegawai_nip' => $pegawai->nip ?? $pegawai->email_bps,
+            'pegawai_nip' => $validated['pegawai_nip'],
             'triwulan' => $validated['triwulan'],
             'kendala' => $validated['kendala'],
             'severity' => $validated['severity'],
@@ -90,6 +91,7 @@ class PublicInputController extends Controller
             'penjelasan_kegiatan' => 'nullable|string',
             'realisasi_kegiatan'  => 'nullable|string',
             'lampiran.*'          => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,csv|max:10240',
+            'pegawai_nip'         => 'required|string',
         ]);
 
         $paths = [];
@@ -102,7 +104,7 @@ class PublicInputController extends Controller
         \App\Models\Aktivitas::create([
             'indikator_id'        => $validated['indikator_id'],
             'kegiatan_id'         => $validated['kegiatan_id'],
-            'pegawai_nip'         => $pegawai->nip ?? $pegawai->email_bps,
+            'pegawai_nip'         => $validated['pegawai_nip'],
             'triwulan'            => $validated['triwulan'],
             'tahapan'             => $validated['tahapan'],
             'tanggal_mulai'       => $validated['tanggal_mulai'],

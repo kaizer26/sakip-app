@@ -24,6 +24,9 @@ class IndikatorRequest extends FormRequest
     {
         return [
             'kode'                       => 'nullable',
+            'kode_tujuan'                => 'nullable|string|max:50',
+            'kode_sasaran'               => 'nullable|string|max:50',
+            'kode_indikator_kinerja'     => 'nullable|string|max:50',
             'tujuan'                     => 'nullable',
             'sasaran'                    => 'required',
             'indikator_kinerja'          => 'required',
@@ -36,9 +39,6 @@ class IndikatorRequest extends FormRequest
             'pic_id'                     => 'nullable|exists:pegawais,id',
             'dasar_hitung'               => 'nullable|string',
             'basis_data'                 => 'nullable|string',
-            'link_bukti_kinerja'         => 'nullable|url',
-            'link_bukti_tindak_lanjut'   => 'nullable|url',
-            'penjelasan_lainnya'         => 'nullable|string',
             'definisi_x'                 => 'nullable|string|max:500',
             'definisi_y'                 => 'nullable|string|max:500',
         ];

@@ -16,6 +16,9 @@ class Indikator extends Model
 
     protected $fillable = [
         'kode',
+        'kode_tujuan',
+        'kode_sasaran',
+        'kode_indikator_kinerja',
         'tujuan',
         'sasaran',
         'indikator_kinerja',
@@ -33,12 +36,9 @@ class Indikator extends Model
         'kendala',
         'solusi',
         'rencana_tindak_lanjut',
-        'penjelasan_lainnya',
         'pic_tindak_lanjut',
         'batas_waktu',
         'severity',
-        'link_bukti_kinerja',
-        'link_bukti_tindak_lanjut',
         'file_bukti_kinerja',
         'file_bukti_tindak_lanjut',
         'definisi_x',
@@ -115,6 +115,11 @@ class Indikator extends Model
     public function analisis()
     {
         return $this->hasMany(Analisis::class);
+    }
+
+    public function capaianKinerjas()
+    {
+        return $this->hasMany(CapaianKinerja::class);
     }
 
     public function getCapaianTahunanAttribute()

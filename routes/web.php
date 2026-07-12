@@ -5,10 +5,10 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IndikatorController;
 use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\TargetController;
-use App\Http\Controllers\RealisasiController;
 use App\Http\Controllers\AnalisisController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\PublicInputController;
+use App\Http\Controllers\CapaianKinerjaController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
@@ -28,21 +28,31 @@ Route::middleware(['auth'])->group(function () {
     Route::post('indikator/{indikator}/rich-content', [IndikatorController::class, 'updateRichContent'])->name('indikator.rich-content');
     Route::post('indikator/{indikator}/media', [IndikatorController::class, 'uploadMedia'])->name('indikator.media');
     
-    Route::resource('pegawai', PegawaiController::class);
-    Route::post('pegawai/{id}/activate', [PegawaiController::class, 'activateAccount'])->name('pegawai.activate');
     Route::post('pegawai/import', [PegawaiController::class, 'import'])->name('pegawai.import');
     Route::get('pegawai/template', [PegawaiController::class, 'downloadTemplate'])->name('pegawai.template');
+    Route::resource('pegawai', PegawaiController::class);
+    Route::post('pegawai/{id}/activate', [PegawaiController::class, 'activateAccount'])->name('pegawai.activate');
 
-    Route::resource('kegiatan-master', \App\Http\Controllers\Admin\KegiatanMasterController::class);
-    Route::post('kegiatan-master/{kegiatan_master}/sync-anggota', [\App\Http\Controllers\Admin\KegiatanMasterController::class, 'syncAnggota'])->name('kegiatan-master.sync-anggota');
     Route::post('kegiatan-master/import', [\App\Http\Controllers\Admin\KegiatanMasterController::class, 'import'])->name('kegiatan-master.import');
     Route::get('kegiatan-master/template', [\App\Http\Controllers\Admin\KegiatanMasterController::class, 'downloadTemplate'])->name('kegiatan-master.template');
+    Route::resource('kegiatan-master', \App\Http\Controllers\Admin\KegiatanMasterController::class);
+    Route::post('kegiatan-master/{kegiatan_master}/sync-anggota', [\App\Http\Controllers\Admin\KegiatanMasterController::class, 'syncAnggota'])->name('kegiatan-master.sync-anggota');
     
     Route::post('output-master/import', [\App\Http\Controllers\Admin\OutputMasterController::class, 'import'])->name('output-master.import');
     Route::get('output-master/template', [\App\Http\Controllers\Admin\OutputMasterController::class, 'downloadTemplate'])->name('output-master.template');
     Route::post('output-master/{output_master}/toggle-status', [\App\Http\Controllers\Admin\OutputMasterController::class, 'toggleStatus'])->name('output-master.toggle-status');
     Route::post('output-master/{output_master}/upload', [\App\Http\Controllers\Admin\OutputMasterController::class, 'uploadFile'])->name('output-master.upload');
     Route::resource('output-master', \App\Http\Controllers\Admin\OutputMasterController::class);
+
+    Route::get('capaian-kinerja', [CapaianKinerjaController::class, 'index'])->name('capaian-kinerja.index');
+    Route::post('capaian-kinerja', [CapaianKinerjaController::class, 'store'])->name('capaian-kinerja.store');
+    Route::post('capaian-kinerja/import', [CapaianKinerjaController::class, 'import'])->name('capaian-kinerja.import');
+    Route::get('capaian-kinerja/template', [CapaianKinerjaController::class, 'template'])->name('capaian-kinerja.template');
+    
+    Route::get('monitoring-capaian', [App\Http\Controllers\MonitoringCapaianController::class, 'index'])->name('monitoring-capaian.index');
+    
+    Route::get('riwayat-kendala', [App\Http\Controllers\RiwayatKendalaController::class, 'index'])->name('riwayat-kendala.index');
+    Route::put('riwayat-kendala/{id}', [App\Http\Controllers\RiwayatKendalaController::class, 'update'])->name('riwayat-kendala.update');
     
     Route::get('target', [TargetController::class, 'index'])->name('target.index');
     Route::get('target/{id}', [TargetController::class, 'show'])->name('target.show');
@@ -53,9 +63,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/template-word/export-notulen', [App\Http\Controllers\TemplateWordController::class, 'exportNotulenCapaian'])->name('template.word.export.notulen');
 
     // Master RO
+    Route::post('tabel-ro/import', [App\Http\Controllers\TabelRoController::class, 'import'])->name('tabel-ro.import');
+    Route::get('tabel-ro/template', [App\Http\Controllers\TabelRoController::class, 'downloadTemplate'])->name('tabel-ro.template');
     Route::resource('tabel-ro', App\Http\Controllers\TabelRoController::class)->except(['show']);
-
-    Route::resource('realisasi', RealisasiController::class)->except(['show']);
     Route::get('admin/aktivitas', [App\Http\Controllers\Admin\AktivitasController::class, 'index'])->name('admin.aktivitas.index');
     Route::get('admin/aktivitas/{aktivitas}/edit', [App\Http\Controllers\Admin\AktivitasController::class, 'edit'])->name('admin.aktivitas.edit');
     Route::put('admin/aktivitas/{aktivitas}', [App\Http\Controllers\Admin\AktivitasController::class, 'update'])->name('admin.aktivitas.update');
@@ -70,9 +80,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('rekap-capaian/export', [App\Http\Controllers\CapaianController::class, 'export'])->name('rekap.capaian.export');
     
     Route::get('monitoring-evidence', [App\Http\Controllers\Admin\EvidenceController::class, 'index'])->name('admin.evidence.index');
-    Route::get('realisasi/entry/{indikator}', [App\Http\Controllers\RealisasiController::class, 'entry'])->name('realisasi.entry');
-    Route::get('realisasi/history/{realisasi}', [App\Http\Controllers\RealisasiController::class, 'history'])->name('realisasi.history');
-    Route::get('api/realisasi/context/{indikator}/{triwulan}', [App\Http\Controllers\RealisasiController::class, 'getContext'])->name('api.realisasi.context');
 
     Route::get('notulen', [\App\Http\Controllers\NotulenController::class, 'index'])->name('notulen.index');
     Route::post('notulen/download', [\App\Http\Controllers\NotulenController::class, 'download'])->name('notulen.download');

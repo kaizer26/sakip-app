@@ -134,14 +134,28 @@
                     @foreach($grouped as $tujuan => $sasaranGroups)
                         <tr class="row-tujuan">
                             <td class="sticky-col-1"></td>
-                            <td class="sticky-col-2">{{ $tujuan ?: 'Tanpa Tujuan' }}</td>
+                            <td class="sticky-col-2">
+                                @php
+                                    $firstIndInTujuan = null;
+                                    foreach($sasaranGroups as $sasGroup) {
+                                        $firstIndInTujuan = $sasGroup->first();
+                                        if($firstIndInTujuan) break;
+                                    }
+                                    $kodeTujuan = $firstIndInTujuan ? $firstIndInTujuan->kode_tujuan : null;
+                                @endphp
+                                {{ ($kodeTujuan ? $kodeTujuan . ' - ' : '') . ($tujuan ?: 'Tanpa Tujuan') }}
+                            </td>
                             <td colspan="14"></td>
                         </tr>
                         @foreach($sasaranGroups as $sasaran => $indicators)
                             <tr class="row-sasaran">
                                 <td class="sticky-col-1"></td>
                                 <td class="sticky-col-2" style="padding-left: 30px;">
-                                    <span class="text-muted small me-2">Sasaran:</span> {{ $sasaran ?: 'Tanpa Sasaran' }}
+                                    @php
+                                        $kodeSasaran = $indicators->first() ? $indicators->first()->kode_sasaran : null;
+                                    @endphp
+                                    <span class="text-muted small me-2">Sasaran:</span> 
+                                    {{ ($kodeSasaran ? $kodeSasaran . ' - ' : '') . ($sasaran ?: 'Tanpa Sasaran') }}
                                 </td>
                                 <td colspan="14"></td>
                             </tr>
@@ -154,7 +168,7 @@
                                 <tr class="row-indikator">
                                     <td class="sticky-col-1">{{ $globalNo++ }}</td>
                                     <td class="sticky-col-2" style="padding-left: 50px;">
-                                        <div class="fw-bold">{{ $i->kode }}</div>
+                                        <div class="fw-bold">{{ $i->kode_indikator_kinerja ?: $i->kode }}</div>
                                         <div>{{ $i->indikator_kinerja }}</div>
                                     </td>
                                     <td class="text-center">{{ $i->jenis_indikator }}</td>

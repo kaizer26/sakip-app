@@ -97,13 +97,7 @@ class IndikatorController extends Controller
 
         $validated = $request->validate([
             'dasar_hitung' => 'nullable|string',
-            'link_bukti_kinerja' => 'nullable|string',
-            'link_bukti_tindak_lanjut' => 'nullable|string',
-            'penjelasan_lainnya' => 'nullable|string',
         ]);
-
-        $validated['link_bukti_kinerja'] = !empty($validated['link_bukti_kinerja']) ? $validated['link_bukti_kinerja'] : null;
-        $validated['link_bukti_tindak_lanjut'] = !empty($validated['link_bukti_tindak_lanjut']) ? $validated['link_bukti_tindak_lanjut'] : null;
 
         $indikator->update($validated);
 
@@ -146,7 +140,8 @@ class IndikatorController extends Controller
     public function downloadTemplate()
     {
         $headers = [
-            'kode', 'tujuan', 'sasaran', 'indikator_kinerja', 
+            'kode', 'kode_tujuan', 'tujuan', 'kode_sasaran', 'sasaran', 
+            'kode_indikator_kinerja', 'indikator_kinerja', 
             'jenis_indikator', 'periode', 'tipe', 'satuan', 
             'target_tahunan', 'tahun'
         ];
