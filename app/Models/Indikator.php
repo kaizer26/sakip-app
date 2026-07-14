@@ -117,6 +117,11 @@ class Indikator extends Model
         return $this->hasMany(Analisis::class);
     }
 
+    public function issues()
+    {
+        return $this->hasMany(Issue::class);
+    }
+
     public function capaianKinerjas()
     {
         return $this->hasMany(CapaianKinerja::class);

@@ -17,7 +17,7 @@ class MonitoringCapaianController extends Controller
             ->with(['realisasis' => function ($query) use ($triwulan) {
                 $query->where('triwulan', $triwulan);
             }, 'analisis' => function ($query) use ($triwulan) {
-                $query->where('triwulan', $triwulan);
+                $query->where('triwulan', $triwulan)->with('tindakLanjuts');
             }])
             ->orderBy('kode')
             ->get();

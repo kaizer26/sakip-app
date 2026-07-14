@@ -60,9 +60,11 @@
                                 $capaian = $capaians->get($ind->id);
                                 $realisasi = $ind->realisasis->first();
                                 $analisis = $ind->analisis->first();
+                                $hasTindakLanjut = $analisis && $analisis->tindakLanjuts->isNotEmpty();
+                                $firstTl = $hasTindakLanjut ? $analisis->tindakLanjuts->first() : null;
                                 
                                 $isComplete = function($val) {
-                                    return ($val !== null && $val !== '') 
+                                    return ($val !== null && $val !== '' && $val !== false) 
                                         ? '<i class="fas fa-check-circle text-success fs-5"></i>' 
                                         : '<i class="fas fa-times-circle text-danger opacity-50"></i>';
                                 };
@@ -90,12 +92,12 @@
                                 <td class="text-center">{!! $isComplete($capaian->argumen_logis ?? null) !!}</td>
                                 <td class="text-center">{!! $isComplete($capaian->penjelasan_lainnya ?? null) !!}</td>
                                 
-                                <td class="text-center">{!! $isComplete($analisis->kendala ?? null) !!}</td>
-                                <td class="text-center">{!! $isComplete($analisis->solusi ?? null) !!}</td>
-                                <td class="text-center">{!! $isComplete($analisis->rencana_tindak_lanjut ?? null) !!}</td>
+                                <td class="text-center">{!! $isComplete($firstTl->kendala ?? null) !!}</td>
+                                <td class="text-center">{!! $isComplete($firstTl->solusi ?? null) !!}</td>
+                                <td class="text-center">{!! $isComplete($firstTl->rtl ?? null) !!}</td>
                                 <td class="text-center">
                                     @php
-                                        $picBatas = ($analisis->pic_tindak_lanjut ?? null) && ($analisis->batas_waktu ?? null);
+                                        $picBatas = ($firstTl->pic ?? null) && ($firstTl->batas_waktu ?? null);
                                     @endphp
                                     {!! $isComplete($picBatas) !!}
                                 </td>

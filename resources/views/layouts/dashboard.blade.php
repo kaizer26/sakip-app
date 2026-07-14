@@ -473,6 +473,13 @@
                     <span class="link-text">{{ auth()->user()->isAdmin() ? 'Master Output' : 'Output Saya' }}</span>
                 </a>
 
+                <a href="{{ route('evaluasi-kinerja.index') }}"
+                    class="nav-link {{ request()->routeIs('evaluasi-kinerja.*') ? 'active' : '' }}"
+                    data-title="Evaluasi Kinerja">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="link-text">Evaluasi Kinerja</span>
+                </a>
+
                 <a href="{{ route('capaian-kinerja.index') }}"
                     class="nav-link {{ request()->routeIs('capaian-kinerja.*') ? 'active' : '' }}"
                     data-title="Capaian Kinerja">
@@ -486,6 +493,22 @@
                     <i class="fas fa-search-plus"></i>
                     <span class="link-text">Monitoring Capaian</span>
                 </a>
+
+                <a href="{{ route('monitoring-rtl.index') }}"
+                    class="nav-link {{ request()->routeIs('monitoring-rtl.*') ? 'active' : '' }}"
+                    data-title="Monitoring RTL">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span class="link-text">Monitoring RTL</span>
+                </a>
+
+                @if(auth()->user()->isAdmin())
+                    <a href="{{ route('monitoring-manajerial.index') }}"
+                        class="nav-link {{ request()->routeIs('monitoring-manajerial.*') ? 'active' : '' }}"
+                        data-title="Monitoring Manajerial">
+                        <i class="fas fa-chart-pie"></i>
+                        <span class="link-text">Monitoring Manajerial</span>
+                    </a>
+                @endif
 
                 <a href="{{ route('riwayat-kendala.index') }}"
                     class="nav-link {{ request()->routeIs('riwayat-kendala.*') ? 'active' : '' }}"
@@ -574,6 +597,14 @@
                             <i class="fas fa-user-circle me-2 text-primary"></i> Profil Saya
                         </a>
                     </li>
+                    @if(auth()->user()->isAdmin())
+                    <li>
+                        <a class="dropdown-item py-2 px-3 rounded-3 mx-2 w-auto" href="#" data-bs-toggle="modal"
+                            data-bs-target="#modalSettings">
+                            <i class="fas fa-cog me-2 text-warning"></i> Pengaturan Periode
+                        </a>
+                    </li>
+                    @endif
                     <li>
                         <hr class="dropdown-divider mx-3 opacity-50">
                     </li>
@@ -703,6 +734,46 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Pengaturan Periode (Admin Only) -->
+    @if(auth()->user()->isAdmin())
+    <div class="modal fade" id="modalSettings" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <form action="{{ route('settings.store') }}" method="POST" class="modal-content border-0 shadow-lg rounded-4">
+                @csrf
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark"><i class="fas fa-cog text-warning me-2"></i>Pengaturan Periode</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Tahun Default</label>
+                        <select name="default_tahun" class="form-select rounded-3">
+                            @for($i = date('Y') - 2; $i <= date('Y') + 2; $i++)
+                                <option value="{{ $i }}" {{ \App\Models\Setting::get('default_tahun', date('Y')) == $i ? 'selected' : '' }}>{{ $i }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Triwulan Default</label>
+                        <select name="default_triwulan" class="form-select rounded-3">
+                            @for($i = 1; $i <= 4; $i++)
+                                <option value="{{ $i }}" {{ \App\Models\Setting::get('default_triwulan', ceil(date('n')/3)) == $i ? 'selected' : '' }}>Q{{ $i }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="text-muted extra-small">
+                        *Pengaturan ini akan menjadi periode default bagi seluruh pengguna saat membuka halaman.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-center">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning rounded-pill px-4 shadow-sm">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
 
     <!-- TinyMCE Rich Text Editor -->
     <script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js" referrerpolicy="origin"></script>

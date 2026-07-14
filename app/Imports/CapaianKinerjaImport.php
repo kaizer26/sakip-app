@@ -56,25 +56,60 @@ class CapaianKinerjaImport implements ToCollection, WithHeadingRow
                 ]
             );
 
+            $batasWaktu = (isset($row['batas_waktu_tl']) && is_numeric($row['batas_waktu_tl'])) 
+                                        ? \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['batas_waktu_tl'])->format('Y-m-d') 
+                                        : ($row['batas_waktu_tl'] ?? null);
+
             // Tabel: analisis
-            Analisis::updateOrCreate(
+            $analisis = Analisis::updateOrCreate(
                 [
                     'indikator_id' => $indikator->id,
                     'triwulan' => $this->triwulan,
                 ],
                 [
-                    'kendala' => $row['kendala_yg_dihadapi'] ?? null,
-                    'solusi' => $row['solusi_yg_telah_dilakukan'] ?? null,
-                    'rencana_tindak_lanjut' => $row['rencana_tindak_lanjut'] ?? null,
-                    'pic_tindak_lanjut' => $row['pic_tindak_lanjut'] ?? null,
-                    // Convert Excel date or use as string based on formatting
-                    'batas_waktu' => (isset($row['batas_waktu_tl']) && is_numeric($row['batas_waktu_tl'])) 
-                                        ? \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['batas_waktu_tl'])->format('Y-m-d') 
-                                        : ($row['batas_waktu_tl'] ?? null),
                     'severity' => 'Low', // Default
                     'pegawai_nip' => auth()->user()->pegawai ? auth()->user()->pegawai->nip : null,
                 ]
             );
+
+            // Parse text to arrays
+            $kendalas = $this->parseBulletPoints($row['kendala_yg_dihadapi'] ?? '');
+            $solusis = $this->parseBulletPoints($row['solusi_yg_telah_dilakukan'] ?? '');
+            $rtls = $this->parseBulletPoints($row['rencana_tindak_lanjut'] ?? '');
+
+            if (count($kendalas) > 0 || count($solusis) > 0 || count($rtls) > 0) {
+                // Hapus data lama agar tidak dobel saat re-import
+                \App\Models\TindakLanjut::where('analisis_id', $analisis->id)->delete();
+
+                $maxCount = max(count($kendalas), count($solusis), count($rtls));
+                for ($i = 0; $i < $maxCount; $i++) {
+                    \App\Models\TindakLanjut::create([
+                        'analisis_id' => $analisis->id,
+                        'kendala' => $kendalas[$i] ?? null,
+                        'solusi' => $solusis[$i] ?? null,
+                        'rtl' => $rtls[$i] ?? null,
+                        'pic' => $row['pic_tindak_lanjut'] ?? null,
+                        'batas_waktu' => $batasWaktu,
+                        'status' => 'Belum Selesai',
+                    ]);
+                }
+            }
         }
+    }
+
+    private function parseBulletPoints($text)
+    {
+        if (empty($text)) return [];
+        // Split by newline
+        $lines = explode("\n", $text);
+        $result = [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+            // Remove starting bullets like "1.", "-", "•"
+            $line = preg_replace('/^(\d+\.|-|\•|\*)\s*/', '', $line);
+            $result[] = trim($line);
+        }
+        return $result;
     }
 }

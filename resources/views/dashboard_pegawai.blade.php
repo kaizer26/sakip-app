@@ -317,31 +317,45 @@
                         </select>
                     </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label small fw-bold mb-1">Kendala yang Dihadapi</label>
-                    <textarea name="kendala" class="form-control rounded-3" rows="3" placeholder="Jelaskan hambatan secara spesifik..." required></textarea>
+                <div id="kendala-container">
+                    <div class="kendala-row border rounded-3 p-3 mb-3 bg-light bg-opacity-50">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-danger">Kendala #1</span>
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-remove-kendala d-none"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold mb-1">Kendala yang Dihadapi</label>
+                            <textarea name="kendala[]" class="form-control rounded-3" rows="2" placeholder="Jelaskan hambatan secara spesifik..." required></textarea>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold mb-1">Solusi yang Dilakukan</label>
+                                <textarea name="solusi[]" class="form-control rounded-3" rows="2" placeholder="Apa yang sudah dilakukan?"></textarea>
+                            </div>
+                            <div class="col-md-6 rtl-field">
+                                <label class="form-label small fw-bold mb-1">Rencana Tindak Lanjut</label>
+                                <textarea name="rencana_tindak_lanjut[]" class="form-control rounded-3" rows="2" placeholder="Apa rencana ke depan?"></textarea>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6 rtl-field">
+                                <label class="form-label small fw-bold mb-1">PIC Tindak Lanjut</label>
+                                <select name="pic_tindak_lanjut[]" class="form-select select2-modal pic_select_kendala">
+                                    <option value="" disabled selected>-- Pilih PIC --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 rtl-field">
+                                <label class="form-label small fw-bold mb-1">Batas Waktu RTL</label>
+                                <input type="date" name="batas_waktu[]" class="form-control rounded-3">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold mb-1">Solusi yang Dilakukan</label>
-                        <textarea name="solusi" class="form-control rounded-3" rows="2" placeholder="Apa yang sudah dilakukan?"></textarea>
-                    </div>
-                    <div class="col-md-6 rtl-field">
-                        <label class="form-label small fw-bold mb-1">Rencana Tindak Lanjut</label>
-                        <textarea name="rencana_tindak_lanjut" class="form-control rounded-3" rows="2" placeholder="Apa rencana ke depan?"></textarea>
-                    </div>
-                </div>
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6 rtl-field">
-                        <label class="form-label small fw-bold mb-1">PIC Tindak Lanjut</label>
-                        <select name="pic_tindak_lanjut" id="pic_select_kendala" class="form-select select2-modal">
-                            <option value="" disabled selected>-- Pilih PIC --</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6 rtl-field">
-                        <label class="form-label small fw-bold mb-1">Batas Waktu RTL</label>
-                        <input type="date" name="batas_waktu" class="form-control rounded-3">
-                    </div>
+                
+                <div class="text-center mb-3">
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" id="btnAddKendala">
+                        <i class="fas fa-plus me-1"></i> Tambah Kendala Lain
+                    </button>
                 </div>
                 <div class="mb-0">
                     <label class="form-label small fw-bold mb-1 text-center d-block">Tingkat Keparahan (Severity)</label>
@@ -473,9 +487,9 @@
             } else {
                 const ketuaId = $selectedKeg.attr('data-ketua');
                 const isKetua = ketuaId == currentUserId;
-                const $picS = $('#pic_select_kendala');
-                const $rtlText = $('textarea[name="rencana_tindak_lanjut"]');
-                const $batasDate = $('input[name="batas_waktu"]');
+                const $picS = $('.pic_select_kendala');
+                const $rtlText = $('textarea[name="rencana_tindak_lanjut[]"]');
+                const $batasDate = $('input[name="batas_waktu[]"]');
                 
                 $('.rtl-field').show();
 
@@ -498,6 +512,36 @@
                 }
                 $picS.select2({ theme: 'bootstrap-5', width: '100%', dropdownParent: $('#modalKendala') });
             }
+        });
+
+        // Handle Add Kendala Row
+        let kendalaCount = 1;
+        $('#btnAddKendala').on('click', function() {
+            kendalaCount++;
+            const $template = $('.kendala-row').first().clone();
+            $template.find('input, textarea').val('');
+            $template.find('.badge').text('Kendala #' + kendalaCount);
+            $template.find('.btn-remove-kendala').removeClass('d-none');
+            
+            // Re-init select2
+            $template.find('.select2-container').remove();
+            $template.find('select').removeClass('select2-hidden-accessible').removeAttr('data-select2-id').removeAttr('tabindex').removeAttr('aria-hidden');
+            
+            $('#kendala-container').append($template);
+            $template.find('.pic_select_kendala').select2({ theme: 'bootstrap-5', width: '100%', dropdownParent: $('#modalKendala') });
+            
+            // Set default values if non-ketua
+            const $selectedKeg = $('#selectKegiatan').find(':selected');
+            const ketuaId = $selectedKeg.attr('data-ketua');
+            if (ketuaId != currentUserId) {
+                $template.find('.pic_select_kendala').html(`<option value="${currentUserName}" selected>${currentUserName}</option>`).prop('disabled', true);
+                $template.find('textarea[name="rencana_tindak_lanjut[]"]').prop('readonly', true).val('Akan diisi oleh Ketua Tim');
+                $template.find('input[name="batas_waktu[]"]').prop('readonly', true);
+            }
+        });
+
+        $(document).on('click', '.btn-remove-kendala', function() {
+            $(this).closest('.kendala-row').remove();
         });
 
         // Severity selection UI

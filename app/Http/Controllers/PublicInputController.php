@@ -19,31 +19,45 @@ class PublicInputController extends Controller
         $validated = $request->validate([
             'indikator_id' => 'required|exists:indikators,id',
             'triwulan' => 'required|integer|between:1,4',
-            'kendala' => 'required|string',
             'severity' => 'required|in:Low,Medium,High',
-            'solusi' => 'nullable|string',
-            'rencana_tindak_lanjut' => 'nullable|string',
-            'pic_tindak_lanjut' => 'nullable|string',
-            'batas_waktu' => 'nullable|date',
             'kegiatan_id' => 'required|exists:kegiatan_masters,id',
             'pegawai_nip' => 'required|string',
+            'kendala' => 'required|array',
+            'kendala.*' => 'required|string',
+            'solusi' => 'nullable|array',
+            'rencana_tindak_lanjut' => 'nullable|array',
+            'pic_tindak_lanjut' => 'nullable|array',
+            'batas_waktu' => 'nullable|array',
         ]);
 
         $kegiatan = \App\Models\KegiatanMaster::find($validated['kegiatan_id']);
         $isKetuaTim = $kegiatan->ketua_tim_id == $pegawai->id;
 
-        Analisis::create([
-            'indikator_id' => $validated['indikator_id'],
-            'pegawai_nip' => $validated['pegawai_nip'],
-            'triwulan' => $validated['triwulan'],
-            'kendala' => $validated['kendala'],
-            'severity' => $validated['severity'],
-            'solusi' => $validated['solusi'],
-            'rencana_tindak_lanjut' => $isKetuaTim ? $validated['rencana_tindak_lanjut'] : null,
-            'pic_tindak_lanjut' => $isKetuaTim ? $validated['pic_tindak_lanjut'] : ($pegawai->nama),
-            'batas_waktu' => $isKetuaTim ? $validated['batas_waktu'] : null,
-            'kegiatan_id' => $validated['kegiatan_id'],
-        ]);
+        // Create or update parent Analisis (since Kendala is now in tindak_lanjuts)
+        $analisis = Analisis::firstOrCreate(
+            [
+                'indikator_id' => $validated['indikator_id'],
+                'triwulan' => $validated['triwulan'],
+            ],
+            [
+                'pegawai_nip' => $validated['pegawai_nip'],
+                'severity' => $validated['severity'],
+                'kegiatan_id' => $validated['kegiatan_id'],
+            ]
+        );
+        
+        // Loop through kendalas
+        foreach ($validated['kendala'] as $index => $kendalaText) {
+            \App\Models\TindakLanjut::create([
+                'analisis_id' => $analisis->id,
+                'kendala' => $kendalaText,
+                'solusi' => $validated['solusi'][$index] ?? null,
+                'rtl' => $isKetuaTim ? ($validated['rencana_tindak_lanjut'][$index] ?? null) : null,
+                'pic' => $isKetuaTim ? ($validated['pic_tindak_lanjut'][$index] ?? null) : ($pegawai->nama),
+                'batas_waktu' => $isKetuaTim ? ($validated['batas_waktu'][$index] ?? null) : null,
+                'status' => 'Belum Selesai',
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Laporan kendala berhasil dikirim.');
     }

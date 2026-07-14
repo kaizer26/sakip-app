@@ -53,6 +53,32 @@ Route::middleware(['auth'])->group(function () {
     
     Route::get('riwayat-kendala', [App\Http\Controllers\RiwayatKendalaController::class, 'index'])->name('riwayat-kendala.index');
     Route::put('riwayat-kendala/{id}', [App\Http\Controllers\RiwayatKendalaController::class, 'update'])->name('riwayat-kendala.update');
+
+    // Issues & Kendala Baru
+    Route::post('issues/store', [App\Http\Controllers\IssueController::class, 'store'])->name('issues.store');
+
+    // Evaluasi Kinerja (Daftar IKU & Lapor Kendala)
+    Route::get('evaluasi-kinerja', [App\Http\Controllers\EvaluasiKinerjaController::class, 'index'])->name('evaluasi-kinerja.index');
+
+    // Monitoring RTL (Dashboard PIC)
+    Route::get('monitoring-rtl', [App\Http\Controllers\RtlController::class, 'index'])->name('monitoring-rtl.index');
+    Route::post('monitoring-rtl/{id}/eksekusi', [App\Http\Controllers\RtlController::class, 'storeExecution'])->name('monitoring-rtl.eksekusi');
+
+    // Monitoring Manajerial
+    Route::get('monitoring-manajerial', [App\Http\Controllers\ManajerialController::class, 'index'])->name('monitoring-manajerial.index');
+    Route::post('monitoring-manajerial/{id}/verifikasi', [App\Http\Controllers\ManajerialController::class, 'verifikasi'])->name('monitoring-manajerial.verifikasi');
+    
+    // Pengaturan Sistem
+    Route::post('settings', function(Illuminate\Http\Request $request) {
+        if (!auth()->user()->isAdmin()) abort(403);
+        $request->validate([
+            'default_tahun' => 'required|integer',
+            'default_triwulan' => 'required|integer|between:1,4',
+        ]);
+        \App\Models\Setting::set('default_tahun', $request->default_tahun);
+        \App\Models\Setting::set('default_triwulan', $request->default_triwulan);
+        return back()->with('success', 'Pengaturan periode berhasil disimpan.');
+    })->name('settings.store');
     
     Route::get('target', [TargetController::class, 'index'])->name('target.index');
     Route::get('target/{id}', [TargetController::class, 'show'])->name('target.show');

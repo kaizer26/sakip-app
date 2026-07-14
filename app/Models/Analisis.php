@@ -38,4 +38,9 @@ class Analisis extends Model
     {
         return $this->belongsTo(Pegawai::class, 'pegawai_nip', 'nip');
     }
+
+    public function tindakLanjuts()
+    {
+        return $this->hasMany(TindakLanjut::class, 'analisis_id');
+    }
 }
