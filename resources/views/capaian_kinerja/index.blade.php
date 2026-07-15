@@ -163,8 +163,20 @@
                                 <input type="number" step="0.01" name="realisasi_y" id="realisasi_y" class="form-control form-control-sm rounded-3 shadow-none border-light-subtle">
                             </div>
 
-                            <div class="col-12 mt-4">
-                                <h6 class="fw-bold small text-primary border-bottom pb-2 mb-3">2. Narasi & Argumen</h6>
+                            <div class="col-12 mt-4 d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                                <h6 class="fw-bold small text-primary mb-0">2. Narasi & Argumen</h6>
+                                @if($triwulan > 1)
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill py-0 px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-copy me-1"></i> Salin Narasi...
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                        @for($i = 1; $i < $triwulan; $i++)
+                                        <li><a class="dropdown-item btn-copy-narasi small" href="#" data-tw="{{ $i }}">Dari Triwulan {{ $i }}</a></li>
+                                        @endfor
+                                    </ul>
+                                </div>
+                                @endif
                             </div>
 
                             <div class="col-12">
@@ -248,6 +260,12 @@
 @section('scripts')
     <script>
         $(document).ready(function () {
+            if (typeof window.initTinyMCE === 'function') {
+                window.initTinyMCE('#dasar_hitung');
+                window.initTinyMCE('#argumen_logis');
+                window.initTinyMCE('#penjelasan_lainnya');
+            }
+
             // Show modal and populate data
             $('.btn-edit-capaian').on('click', function () {
                 const btn = $(this);
@@ -279,9 +297,23 @@
                     $('.xy-input').hide();
                 }
                 
-                $('#dasar_hitung').val(btn.data('dasar'));
-                $('#argumen_logis').val(btn.data('argumen'));
-                $('#penjelasan_lainnya').val(btn.data('penjelasan'));
+                if (typeof tinymce !== 'undefined' && tinymce.get('dasar_hitung')) {
+                    tinymce.get('dasar_hitung').setContent(btn.data('dasar') ? String(btn.data('dasar')) : '');
+                } else {
+                    $('#dasar_hitung').val(btn.data('dasar'));
+                }
+                
+                if (typeof tinymce !== 'undefined' && tinymce.get('argumen_logis')) {
+                    tinymce.get('argumen_logis').setContent(btn.data('argumen') ? String(btn.data('argumen')) : '');
+                } else {
+                    $('#argumen_logis').val(btn.data('argumen'));
+                }
+                
+                if (typeof tinymce !== 'undefined' && tinymce.get('penjelasan_lainnya')) {
+                    tinymce.get('penjelasan_lainnya').setContent(btn.data('penjelasan') ? String(btn.data('penjelasan')) : '');
+                } else {
+                    $('#penjelasan_lainnya').val(btn.data('penjelasan'));
+                }
 
                 $('#link_bukti_kinerja').val(btn.data('kinerja'));
                 $('#link_bukti_tindak_lanjut').val(btn.data('rtl'));
@@ -293,6 +325,10 @@
             // Form Submit
             $('#formCapaian').on('submit', function (e) {
                 e.preventDefault();
+                
+                if (typeof tinymce !== 'undefined') {
+                    tinymce.triggerSave();
+                }
                 
                 const btn = $('#btnSimpan');
                 btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...');
@@ -319,5 +355,48 @@
                 });
             });
         });
+
+        // Copy Narasi Button
+        $(document).on('click', '.btn-copy-narasi', function(e) {
+            e.preventDefault();
+            const tw = $(this).data('tw');
+            const indikatorId = $('#indikator_id').val();
+            const tahun = $('input[name="tahun"]').val();
+            
+            const btn = $(this).closest('.dropdown').find('.dropdown-toggle');
+            const originalText = btn.html();
+            btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Menyalin...').prop('disabled', true);
+
+            $.get(`{{ url('capaian-kinerja') }}/${indikatorId}/previous-data`, { tahun: tahun, triwulan: tw }, function(res) {
+                if(res.status === 'success') {
+                    const data = res.data;
+                    
+                    if(data.dasar_hitung !== undefined && window.tinymce && tinymce.get('dasar_hitung')) {
+                        tinymce.get('dasar_hitung').setContent(data.dasar_hitung);
+                    } else if (data.dasar_hitung !== undefined) {
+                        $('#dasar_hitung').val(data.dasar_hitung);
+                    }
+                    
+                    if(data.argumen_logis !== undefined && window.tinymce && tinymce.get('argumen_logis')) {
+                        tinymce.get('argumen_logis').setContent(data.argumen_logis);
+                    } else if (data.argumen_logis !== undefined) {
+                        $('#argumen_logis').val(data.argumen_logis);
+                    }
+                    
+                    if(data.penjelasan_lainnya !== undefined && window.tinymce && tinymce.get('penjelasan_lainnya')) {
+                        tinymce.get('penjelasan_lainnya').setContent(data.penjelasan_lainnya);
+                    } else if (data.penjelasan_lainnya !== undefined) {
+                        $('#penjelasan_lainnya').val(data.penjelasan_lainnya);
+                    }
+                    
+                    toastr.success(`Berhasil menyalin narasi dari Triwulan ${tw}`);
+                }
+            }).fail(function() {
+                toastr.warning(`Data narasi Triwulan ${tw} masih kosong atau belum diisi.`);
+            }).always(function() {
+                btn.html(originalText).prop('disabled', false);
+            });
+        });
+
     </script>
 @endsection

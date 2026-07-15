@@ -12,6 +12,9 @@
             <a href="{{ route('pegawai.template') }}" class="btn btn-outline-success rounded-pill px-3 ms-2 fw-bold">
                 <i class="fas fa-download me-1"></i> Template
             </a>
+            <button type="button" class="btn btn-info rounded-pill px-3 ms-2 fw-bold text-white" id="btnSyncApi">
+                <i class="fas fa-sync-alt me-1"></i> Sync IPIN
+            </button>
         </div>
         <form action="{{ route('pegawai.import') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center">
             @csrf
@@ -76,7 +79,7 @@
                         </td>
                         <td>
                             <div class="small text-dark fw-bold">{{ $p->jabatan ?: '-' }}</div>
-                            <div class="extra-small text-muted">{{ $p->unit_kerja ?: '-' }}</div>
+                            <div class="extra-small text-muted">{{ $p->pangkat_golongan ?: '-' }} &bull; {{ $p->unit_kerja ?: '-' }}</div>
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center align-items-center gap-1">
@@ -159,6 +162,10 @@
                             <input type="text" name="jabatan" id="jabatan" class="form-control rounded-3 shadow-none border-light-subtle" placeholder="Contoh: Statistisi Ahli Pertama">
                         </div>
                         <div class="col-12">
+                            <label class="form-label fw-bold small">Pangkat / Golongan</label>
+                            <input type="text" name="pangkat_golongan" id="pangkat_golongan" class="form-control rounded-3 shadow-none border-light-subtle" placeholder="Contoh: Penata Muda Tk. I (III/b)">
+                        </div>
+                        <div class="col-12">
                             <label class="form-label fw-bold small">Unit Kerja</label>
                             <input type="text" name="unit_kerja" id="unit_kerja" class="form-control rounded-3 shadow-none border-light-subtle" placeholder="Contoh: BPS Kabupaten Tapin">
                         </div>
@@ -203,6 +210,7 @@
                 $('#email_bps').val(data.email_bps);
                 $('#no_hp').val(data.no_hp);
                 $('#jabatan').val(data.jabatan);
+                $('#pangkat_golongan').val(data.pangkat_golongan);
                 $('#unit_kerja').val(data.unit_kerja);
                 $('#status').val(data.status);
                 $('#seksi').val(data.seksi);
@@ -255,7 +263,7 @@
                         `);
                         row.find('td:nth-child(6)').html(`
                             <div class="small text-dark fw-bold">${data.jabatan || '-'}</div>
-                            <div class="extra-small text-muted">${data.unit_kerja || '-'}</div>
+                            <div class="extra-small text-muted">${data.pangkat_golongan || '-'} &bull; ${data.unit_kerja || '-'}</div>
                         `);
 
                         // Invalidate and draw (keep paging)
@@ -320,6 +328,30 @@
                 },
                 error: function() {
                     toastr.error('Gagal menghapus data.');
+                }
+            });
+        });
+
+        // Sync API Button Click
+        $('#btnSyncApi').on('click', function() {
+            if (!confirm('Tarik data master pegawai terbaru dari API IPIN Tapin?')) return;
+            const btn = $(this);
+            const originalContent = btn.html();
+            
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Syncing...');
+
+            $.ajax({
+                url: "{{ route('pegawai.sync-api') }}",
+                method: 'POST',
+                data: { _token: "{{ csrf_token() }}" },
+                success: function(response) {
+                    toastr.success(response.message);
+                    setTimeout(() => location.reload(), 2000);
+                },
+                error: function(xhr) {
+                    btn.prop('disabled', false).html(originalContent);
+                    const msg = xhr.responseJSON ? xhr.responseJSON.message : 'Gagal sinkronisasi data.';
+                    toastr.error(msg);
                 }
             });
         });

@@ -6,12 +6,13 @@ use Illuminate\Http\Request;
 use App\Models\Indikator;
 use App\Models\Pegawai;
 use PhpOffice\PhpWord\TemplateProcessor;
+use App\Services\RichTemplateProcessor;
 
 class TemplateWordController extends Controller
 {
     public function index()
     {
-        $pegawais = Pegawai::orderBy('nama', 'asc')->get();
+        $pegawais = Pegawai::orderBy('pangkat_golongan', 'desc')->orderBy('nip', 'asc')->get();
         return view('template_word.index', compact('pegawais'));
     }
 
@@ -40,7 +41,7 @@ class TemplateWordController extends Controller
             return redirect()->back()->with('error', 'File template Notulen Capaian (notulen_capkin.docx) tidak ditemukan di folder storage/app/templates.');
         }
 
-        $templateProcessor = new TemplateProcessor($templatePath);
+        $templateProcessor = new RichTemplateProcessor($templatePath);
 
         // Replace tag umum
         $triwulans = ['', 'TRIWULAN I', 'TRIWULAN II', 'TRIWULAN III', 'TRIWULAN IV'];
@@ -64,6 +65,9 @@ class TemplateWordController extends Controller
             },
             'analisis' => function ($q) use ($validated) {
                 $q->where('triwulan', $validated['triwulan']);
+            },
+            'capaianKinerjas' => function ($q) use ($validated) {
+                $q->where('tahun', $validated['tahun'])->where('triwulan', $validated['triwulan']);
             },
             'tabelRos' => function ($q) use ($validated) {
                 $q->where('tahun', $validated['tahun'])->where('triwulan', $validated['triwulan']);
@@ -90,6 +94,7 @@ class TemplateWordController extends Controller
 
             $realisasi = $indikator->realisasis->first();
             $analisis = $indikator->analisis->first();
+            $capaianData = $indikator->capaianKinerjas->first();
 
             $targetField = 'target_tw' . $validated['triwulan'];
             $target = $indikator->target ? $indikator->target->$targetField : '-';
@@ -139,12 +144,20 @@ class TemplateWordController extends Controller
             $templateProcessor->setValue("batas_waktu#{$blockIdx}", $indikator->batas_waktu ?? '-');
 
             $basisData = $indikator->basis_data ? html_entity_decode(strip_tags($indikator->basis_data)) : '-';
+            
+            $dasarHitung = $capaianData && $capaianData->dasar_hitung ? $capaianData->dasar_hitung : ($indikator->dasar_hitung ? $indikator->dasar_hitung : '-');
+            $argumenLogis = $capaianData && $capaianData->argumen_logis ? $capaianData->argumen_logis : '-';
+            $penjelasanLainnya = $capaianData && $capaianData->penjelasan_lainnya ? $capaianData->penjelasan_lainnya : ($indikator->penjelasan_lainnya ?? '-');
+            
             $templateProcessor->setValue("basis_data#{$blockIdx}", $basisData);
             $templateProcessor->setValue("basis_data_baseline#{$blockIdx}", $basisData);
-            $templateProcessor->setValue("dasar_hitung#{$blockIdx}", $indikator->dasar_hitung ? html_entity_decode(strip_tags($indikator->dasar_hitung)) : '-');
-            $templateProcessor->setValue("link_bukti_kinerja#{$blockIdx}", $indikator->link_bukti_kinerja ?? '-');
-            $templateProcessor->setValue("link_bukti_tindak_lanjut#{$blockIdx}", $indikator->link_bukti_tindak_lanjut ?? '-');
-            $templateProcessor->setValue("penjelasan_lainnya#{$blockIdx}", $indikator->penjelasan_lainnya ?? '-');
+            
+            try { $templateProcessor->setHtmlValue("dasar_hitung#{$blockIdx}", $dasarHitung); } catch (\Exception $e) {}
+            try { $templateProcessor->setHtmlValue("argumen_logis#{$blockIdx}", $argumenLogis); } catch (\Exception $e) {}
+            try { $templateProcessor->setHtmlValue("penjelasan_lainnya#{$blockIdx}", $penjelasanLainnya); } catch (\Exception $e) {}
+
+            $templateProcessor->setValue("link_bukti_kinerja#{$blockIdx}", $capaianData->link_bukti_kinerja ?? ($indikator->link_bukti_kinerja ?? '-'));
+            $templateProcessor->setValue("link_bukti_tindak_lanjut#{$blockIdx}", $capaianData->link_bukti_tindak_lanjut ?? ($indikator->link_bukti_tindak_lanjut ?? '-'));
 
             // Target X/Y
             $targetObj = $indikator->target;
@@ -326,16 +339,28 @@ class TemplateWordController extends Controller
             'tanggal_kegiatan' => 'required|date',
             'pimpinan_id' => 'required|exists:pegawais,id',
             'pembuat_id' => 'required|exists:pegawais,id',
-            'jumlah_baris' => 'required|integer|min:1|max:100'
+            'jumlah_baris' => 'nullable|integer|min:1|max:100',
+            'tampilkan_nama' => 'nullable'
         ]);
 
         $pimpinan = Pegawai::find($validated['pimpinan_id']);
         $pembuat = Pegawai::find($validated['pembuat_id']);
-        $jumlah_baris = $validated['jumlah_baris'];
+        
+        $tampilkan_nama = isset($validated['tampilkan_nama']) && $validated['tampilkan_nama'] === 'on';
+        
+        $pegawais = [];
+        $jumlah_baris = 20;
+
+        if ($tampilkan_nama) {
+            $pegawais = Pegawai::orderBy('pangkat_golongan', 'desc')->orderBy('nip', 'asc')->get();
+            $jumlah_baris = count($pegawais);
+        } else {
+            $jumlah_baris = $validated['jumlah_baris'] ?? 20;
+        }
 
         \Carbon\Carbon::setLocale('id');
         $tanggal = \Carbon\Carbon::parse($validated['tanggal_kegiatan'])->translatedFormat('d F Y');
 
-        return view('template_word.daftar_hadir', compact('validated', 'tanggal', 'pimpinan', 'pembuat', 'jumlah_baris'));
+        return view('template_word.daftar_hadir', compact('validated', 'tanggal', 'pimpinan', 'pembuat', 'jumlah_baris', 'tampilkan_nama', 'pegawais'));
     }
 }

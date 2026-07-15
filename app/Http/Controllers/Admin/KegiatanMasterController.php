@@ -16,7 +16,7 @@ class KegiatanMasterController extends Controller
         $query = KegiatanMaster::with(['indikator', 'ketuaTim', 'anggotas']);
         
         $indikators = Indikator::all();
-        $pegawais = \App\Models\Pegawai::all();
+        $pegawais = \App\Models\Pegawai::orderBy('pangkat_golongan', 'desc')->orderBy('nip', 'asc')->get();
 
         // Filter: Admin sees all, PIC Indikator sees activities under their indicators or where they are ketua tim
         if (!auth()->user()->isAdmin()) {

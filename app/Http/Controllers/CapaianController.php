@@ -10,7 +10,7 @@ class CapaianController extends Controller
 {
     public function rekap(Request $request)
     {
-        $tahun = $request->get('tahun', date('Y'));
+        $tahun = $request->get('tahun', \App\Models\Setting::get('default_tahun', date('Y')));
         
         $indicators = Indikator::with(['target', 'realisasis', 'kegiatanMasters', 'analisis', 'issues'])
             ->where('tahun', $tahun)
@@ -26,7 +26,7 @@ class CapaianController extends Controller
 
     public function export(Request $request)
     {
-        $tahun = $request->get('tahun', date('Y'));
+        $tahun = $request->get('tahun', \App\Models\Setting::get('default_tahun', date('Y')));
         
         return \Maatwebsite\Excel\Facades\Excel::download(
             new \App\Exports\CapaianExport($tahun), 

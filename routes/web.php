@@ -28,6 +28,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('indikator/{indikator}/rich-content', [IndikatorController::class, 'updateRichContent'])->name('indikator.rich-content');
     Route::post('indikator/{indikator}/media', [IndikatorController::class, 'uploadMedia'])->name('indikator.media');
     
+    Route::post('pegawai/sync-api', [PegawaiController::class, 'syncApi'])->name('pegawai.sync-api');
     Route::post('pegawai/import', [PegawaiController::class, 'import'])->name('pegawai.import');
     Route::get('pegawai/template', [PegawaiController::class, 'downloadTemplate'])->name('pegawai.template');
     Route::resource('pegawai', PegawaiController::class);
@@ -45,6 +46,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('output-master', \App\Http\Controllers\Admin\OutputMasterController::class);
 
     Route::get('capaian-kinerja', [CapaianKinerjaController::class, 'index'])->name('capaian-kinerja.index');
+    Route::get('capaian-kinerja/{indikator}/previous-data', [CapaianKinerjaController::class, 'getDataPrevious'])->name('capaian-kinerja.previous-data');
     Route::post('capaian-kinerja', [CapaianKinerjaController::class, 'store'])->name('capaian-kinerja.store');
     Route::post('capaian-kinerja/import', [CapaianKinerjaController::class, 'import'])->name('capaian-kinerja.import');
     Route::get('capaian-kinerja/template', [CapaianKinerjaController::class, 'template'])->name('capaian-kinerja.template');
@@ -59,6 +61,13 @@ Route::middleware(['auth'])->group(function () {
 
     // Evaluasi Kinerja (Daftar IKU & Lapor Kendala)
     Route::get('evaluasi-kinerja', [App\Http\Controllers\EvaluasiKinerjaController::class, 'index'])->name('evaluasi-kinerja.index');
+
+    // Anggaran & Realisasi
+    Route::get('anggaran', [App\Http\Controllers\IndikatorAnggaranController::class, 'index'])->name('anggaran.index');
+    Route::post('anggaran', [App\Http\Controllers\IndikatorAnggaranController::class, 'store'])->name('anggaran.store');
+    Route::post('anggaran/sasaran', [App\Http\Controllers\IndikatorAnggaranController::class, 'storeSasaran'])->name('anggaran.storeSasaran');
+    Route::get('anggaran/template', [App\Http\Controllers\IndikatorAnggaranController::class, 'downloadTemplate'])->name('anggaran.template');
+    Route::post('anggaran/import', [App\Http\Controllers\IndikatorAnggaranController::class, 'import'])->name('anggaran.import');
 
     // Monitoring RTL (Dashboard PIC)
     Route::get('monitoring-rtl', [App\Http\Controllers\RtlController::class, 'index'])->name('monitoring-rtl.index');

@@ -5,28 +5,28 @@
 @section('content')
     <div class="d-flex justify-content-between align-items-end mb-4">
         <div>
-            <h4 class="fw-bold text-dark mb-1">Evaluasi Kinerja - Q{{ $triwulan }} {{ $tahun }}</h4>
+            <h4 class="fw-bold text-dark mb-1">Evaluasi Kinerja - Triwulan {{ $triwulan }} - {{ $tahun }}</h4>
             <div class="text-muted small">Daftar Indikator Kinerja Utama dan Pelaporan Kendala.</div>
         </div>
-        <form action="{{ route('evaluasi-kinerja.index') }}" method="GET" class="d-flex gap-2">
-            <select name="tahun" class="form-select form-select-sm rounded-pill px-3 shadow-sm" onchange="this.form.submit()">
+        <form action="{{ route('evaluasi-kinerja.index') }}" method="GET" class="d-flex gap-1">
+            <select name="tahun" class="form-select form-select-sm rounded-pill shadow-sm" onchange="this.form.submit()">
                 @for($i = date('Y') - 2; $i <= date('Y') + 1; $i++)
                     <option value="{{ $i }}" {{ $tahun == $i ? 'selected' : '' }}>{{ $i }}</option>
                 @endfor
             </select>
-            <select name="triwulan" class="form-select form-select-sm rounded-pill px-3 shadow-sm" onchange="this.form.submit()">
-                <option value="1" {{ $triwulan == 1 ? 'selected' : '' }}>Q1</option>
-                <option value="2" {{ $triwulan == 2 ? 'selected' : '' }}>Q2</option>
-                <option value="3" {{ $triwulan == 3 ? 'selected' : '' }}>Q3</option>
-                <option value="4" {{ $triwulan == 4 ? 'selected' : '' }}>Q4</option>
+            <select name="triwulan" class="form-select form-select-sm rounded-pill shadow-sm" onchange="this.form.submit()">
+                <option value="1" {{ $triwulan == 1 ? 'selected' : '' }}>Triwulan 1</option>
+                <option value="2" {{ $triwulan == 2 ? 'selected' : '' }}>Triwulan 2</option>
+                <option value="3" {{ $triwulan == 3 ? 'selected' : '' }}>Triwulan 3</option>
+                <option value="4" {{ $triwulan == 4 ? 'selected' : '' }}>Triwulan 4</option>
             </select>
         </form>
     </div>
 
     <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-body p-0">
+        <div class="card-body p-2">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="evaluasiTable" style="font-size: 0.9rem;">
+                <table class="table table-hover align-middle mb-0 p-2" id="evaluasiTable" style="font-size: 0.9rem;">
                     <thead class="table-light">
                         <tr>
                             <th width="50" class="text-center">No</th>

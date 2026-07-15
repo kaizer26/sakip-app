@@ -34,7 +34,7 @@ class IndikatorController extends Controller
         }
 
         $indikators = $query->get();
-        $pegawais = \App\Models\Pegawai::all();
+        $pegawais = \App\Models\Pegawai::orderBy('pangkat_golongan', 'desc')->orderBy('nip', 'asc')->get();
         return view('indikator.index', compact('indikators', 'pegawais'));
     }
 

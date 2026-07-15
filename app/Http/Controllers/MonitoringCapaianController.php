@@ -10,8 +10,8 @@ class MonitoringCapaianController extends Controller
 {
     public function index(Request $request)
     {
-        $tahun = $request->get('tahun', date('Y'));
-        $triwulan = $request->get('triwulan', min(ceil(date('n') / 3), 4));
+        $tahun = $request->get('tahun', \App\Models\Setting::get('default_tahun', date('Y')));
+        $triwulan = $request->get('triwulan', \App\Models\Setting::get('default_triwulan', min(ceil(date('n') / 3), 4)));
 
         $indikators = Indikator::visibleTo(auth()->user())
             ->with(['realisasis' => function ($query) use ($triwulan) {

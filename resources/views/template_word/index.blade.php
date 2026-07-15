@@ -218,11 +218,18 @@
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label small fw-bold">Jumlah Baris Kosong (Peserta)</label>
-                            <input type="number" name="jumlah_baris" class="form-control" value="20" min="1" max="100"
-                                required>
-                            <small class="text-muted">Tentukan berapa banyak baris kosong yang ingin disediakan untuk daftar
-                                hadir.</small>
+                            <label class="form-label small fw-bold">Opsi Tampilan Peserta</label>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" name="tampilkan_nama" id="toggleTampilkanNama">
+                                <label class="form-check-label small" for="toggleTampilkanNama">
+                                    Tampilkan seluruh nama pegawai BPS
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12" id="containerJumlahBaris">
+                            <label class="form-label small fw-bold">Atau Jumlah Baris Kosong (Peserta)</label>
+                            <input type="number" name="jumlah_baris" id="inputJumlahBaris" class="form-control" value="20" min="1" max="100">
+                            <small class="text-muted">Tentukan berapa banyak baris kosong yang ingin disediakan untuk daftar hadir jika nama pegawai dikosongkan.</small>
                         </div>
                     </div>
 
@@ -278,6 +285,18 @@
                     $('#form-coming_soon').fadeIn();
                 }
             });
+
+            $('#toggleTampilkanNama').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#containerJumlahBaris').slideUp();
+                    $('#inputJumlahBaris').prop('required', false);
+                } else {
+                    $('#containerJumlahBaris').slideDown();
+                    $('#inputJumlahBaris').prop('required', true);
+                }
+            });
+            // trigger on load
+            $('#toggleTampilkanNama').trigger('change');
         });
     </script>
 @endsection

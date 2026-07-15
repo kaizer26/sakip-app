@@ -10,8 +10,8 @@ class CapaianKinerjaController extends Controller
 {
     public function index(Request $request)
     {
-        $tahun = $request->get('tahun', date('Y'));
-        $triwulan = $request->get('triwulan', min(ceil(date('n') / 3), 4));
+        $tahun = $request->get('tahun', \App\Models\Setting::get('default_tahun', date('Y')));
+        $triwulan = $request->get('triwulan', \App\Models\Setting::get('default_triwulan', min(ceil(date('n') / 3), 4)));
 
         // Get indicators visible to current user with target and realisasi for current triwulan
         $indikators = Indikator::visibleTo(auth()->user())
@@ -117,6 +117,33 @@ class CapaianKinerjaController extends Controller
             'tahun' => $validated['tahun'],
             'triwulan' => $validated['triwulan'],
         ])->with('success', 'Capaian kinerja berhasil disimpan.');
+    }
+
+    public function getDataPrevious(Request $request, $indikatorId)
+    {
+        $tahun = $request->get('tahun', date('Y'));
+        $triwulan = $request->get('triwulan');
+
+        $capaian = CapaianKinerja::where('indikator_id', $indikatorId)
+            ->where('tahun', $tahun)
+            ->where('triwulan', $triwulan)
+            ->first();
+
+        if ($capaian && ($capaian->dasar_hitung || $capaian->argumen_logis || $capaian->penjelasan_lainnya)) {
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'dasar_hitung' => $capaian->dasar_hitung ?? '',
+                    'argumen_logis' => $capaian->argumen_logis ?? '',
+                    'penjelasan_lainnya' => $capaian->penjelasan_lainnya ?? ''
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Data tidak ditemukan'
+        ], 404);
     }
     public function import(Request $request)
     {

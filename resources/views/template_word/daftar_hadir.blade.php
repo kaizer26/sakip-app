@@ -57,8 +57,7 @@
             width: 100%;
             border-collapse: separate; /* Menghindari bug Chrome saat print PDF dimana background menimpa border */
             border-spacing: 0;
-            border-top: 1.5px solid #000;
-            border-left: 1.5px solid #000;
+            border-left: 1px solid #000;
             font-size: 13px;
             color: #000;
         }
@@ -70,12 +69,17 @@
         }
 
         th, td {
-            border-bottom: 1.5px solid #000 !important;
-            border-right: 1.5px solid #000 !important;
+            border-bottom: 1px solid #000 !important;
+            border-right: 1px solid #000 !important;
             border-top: none !important;
             border-left: none !important;
             padding: 8px 10px;
             vertical-align: middle;
+        }
+
+        /* Top border on header to repeat on new pages */
+        thead tr:first-child th {
+            border-top: 1px solid #000 !important;
         }
 
         /* Header Tabel (Nama Kolom) */
@@ -107,14 +111,20 @@
             font-weight: bold;
         }
 
-        .col-nama {
+        th.col-nama, td.col-nama {
             width: 34%;
+        }
+        
+        td.col-nama {
             text-align: left;
             padding-left: 12px;
         }
 
-        .col-jabatan {
+        th.col-jabatan, td.col-jabatan {
             width: 30%;
+        }
+
+        td.col-jabatan {
             text-align: left;
             padding-left: 12px;
         }
@@ -263,15 +273,18 @@
             }
 
             table {
-                border-top: 1.5px solid #000 !important;
-                border-left: 1.5px solid #000 !important;
+                border-left: 1px solid #000 !important;
             }
 
             th, td {
-                border-bottom: 1.5px solid #000 !important;
-                border-right: 1.5px solid #000 !important;
+                border-bottom: 1px solid #000 !important;
+                border-right: 1px solid #000 !important;
                 border-top: none !important;
                 border-left: none !important;
+            }
+
+            thead tr:first-child th {
+                border-top: 1px solid #000 !important;
             }
 
             .document-container {
@@ -336,10 +349,18 @@
                 </thead>
                 <tbody>
                     @for($i = 0; $i < $jumlah_baris; $i++)
+                    @php
+                        $nama = '';
+                        $jabatan = '';
+                        if ($tampilkan_nama && isset($pegawais[$i])) {
+                            $nama = $pegawais[$i]->nama;
+                            $jabatan = $pegawais[$i]->jabatan;
+                        }
+                    @endphp
                     <tr class="data-row">
                         <td class="col-no">{{ $i + 1 }}</td>
-                        <td class="col-nama"></td>
-                        <td class="col-jabatan"></td>
+                        <td class="col-nama">{{ $nama }}</td>
+                        <td class="col-jabatan">{{ $jabatan }}</td>
                         
                         @if($i % 2 == 0)
                             <td class="col-signature">{{ $i + 1 }}.</td>

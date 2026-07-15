@@ -152,4 +152,8 @@ class Indikator extends Model
         return "{$completed}/{$total}";
     }
 
+    public function anggarans()
+    {
+        return $this->hasMany(IndikatorAnggaran::class, 'indikator_id');
+    }
 }

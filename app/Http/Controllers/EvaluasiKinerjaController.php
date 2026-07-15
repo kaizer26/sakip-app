@@ -27,7 +27,7 @@ class EvaluasiKinerjaController extends Controller
             }])
             ->get();
             
-        $pegawais = Pegawai::all();
+        $pegawais = Pegawai::orderBy('pangkat_golongan', 'desc')->orderBy('nip', 'asc')->get();
 
         return view('evaluasi_kinerja.index', compact('indikators', 'tahun', 'triwulan', 'pegawais'));
     }

@@ -12,7 +12,10 @@ class PegawaiController extends Controller
 {
     public function index()
     {
-        $pegawais = Pegawai::with('user')->get();
+        $pegawais = Pegawai::with('user')
+            ->orderBy('pangkat_golongan', 'desc')
+            ->orderBy('nip', 'asc')
+            ->get();
         return view('pegawai.index', compact('pegawais'));
     }
 
@@ -28,6 +31,7 @@ class PegawaiController extends Controller
             'nama' => 'required|string',
             'email_bps' => 'nullable|email|unique:pegawais,email_bps',
             'jabatan' => 'nullable|string',
+            'pangkat_golongan' => 'nullable|string',
             'unit_kerja' => 'nullable|string',
             'status' => 'required|in:PNS,PPPK,Outsourcing,Lainnya',
             'seksi' => 'required|in:Sosial,Produksi,Distribusi,Nerwilis,IPDS,Umum,Lainnya',
@@ -59,6 +63,7 @@ class PegawaiController extends Controller
             'nama' => 'required|string',
             'email_bps' => 'nullable|email|unique:pegawais,email_bps,' . $pegawai->id,
             'jabatan' => 'nullable|string',
+            'pangkat_golongan' => 'nullable|string',
             'unit_kerja' => 'nullable|string',
             'status' => 'required|in:PNS,PPPK,Outsourcing,Lainnya',
             'seksi' => 'required|in:Sosial,Produksi,Distribusi,Nerwilis,IPDS,Umum,Lainnya',
@@ -137,6 +142,86 @@ class PegawaiController extends Controller
         $request->validate(['file' => 'required|mimes:xlsx,xls']);
         Excel::import(new PegawaiImport, $request->file('file'));
         return redirect()->route('pegawai.index')->with('success', 'Data Pegawai berhasil diimport.');
+    }
+
+    public function syncApi()
+    {
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(30)->get('https://ipin.bps-tapin.com/api/employees/full');
+            if (!$response->successful()) {
+                if (request()->ajax()) {
+                    return response()->json(['status' => 'error', 'message' => 'Gagal terhubung ke API Pegawai'], 500);
+                }
+                return redirect()->back()->with('error', 'Gagal terhubung ke API Pegawai');
+            }
+
+            $employees = $response->json('data') ?? [];
+            $countUpdated = 0;
+            $countCreated = 0;
+
+            foreach ($employees as $emp) {
+                $nip = $emp['nip_pns'] ?? null;
+                $email = $emp['email_bps'] ?? null;
+
+                if (!$nip && !$email) continue;
+
+                $pegawai = null;
+                if ($nip) {
+                    $pegawai = Pegawai::where('nip', $nip)->first();
+                }
+                if (!$pegawai && $email) {
+                    $pegawai = Pegawai::where('email_bps', $email)->first();
+                }
+
+                $namaLengkap = trim($emp['nama_lengkap'] ?? '');
+                $gelarBelakang = trim($emp['gelar_belakang'] ?? '');
+                $nama = $namaLengkap . ($gelarBelakang ? ', ' . $gelarBelakang : '');
+                
+                $jabFungsional = trim($emp['jabatan_fungsional_nama'] ?? '');
+                $jabatanRaw = trim($emp['jabatan'] ?? '');
+                $jabatan = trim($jabFungsional . ' ' . $jabatanRaw);
+                
+                $unit_kerja = $emp['satker'] ?? null;
+                $no_hp = $emp['no_hp'] ?? null;
+                $pangkat_golongan = $emp['pangkat_golongan'] ?? null;
+
+                if ($pegawai) {
+                    $pegawai->update([
+                        'nama' => $nama,
+                        'nip' => $nip ?: $pegawai->nip,
+                        'email_bps' => $email ?: $pegawai->email_bps,
+                        'jabatan' => $jabatan,
+                        'pangkat_golongan' => $pangkat_golongan,
+                        'unit_kerja' => $unit_kerja,
+                        'no_hp' => $no_hp,
+                    ]);
+                    $countUpdated++;
+                } else {
+                    Pegawai::create([
+                        'nip' => $nip ?? '',
+                        'nama' => $nama,
+                        'email_bps' => $email,
+                        'jabatan' => $jabatan,
+                        'pangkat_golongan' => $pangkat_golongan,
+                        'unit_kerja' => $unit_kerja,
+                        'no_hp' => $no_hp,
+                        'status' => 'PNS',
+                        'seksi' => 'Lainnya',
+                    ]);
+                    $countCreated++;
+                }
+            }
+
+            if (request()->ajax()) {
+                return response()->json(['status' => 'success', 'message' => "Sync berhasil. $countCreated data ditambahkan, $countUpdated data diperbarui."]);
+            }
+            return redirect()->back()->with('success', "Sync berhasil. $countCreated data ditambahkan, $countUpdated data diperbarui.");
+        } catch (\Exception $e) {
+            if (request()->ajax()) {
+                return response()->json(['status' => 'error', 'message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     public function downloadTemplate()

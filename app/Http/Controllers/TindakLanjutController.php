@@ -10,8 +10,8 @@ class TindakLanjutController extends Controller
 {
     public function index(Request $request)
     {
-        $tahun = $request->get('tahun', date('Y'));
-        $triwulan = $request->get('triwulan');
+        $tahun = $request->get('tahun', \App\Models\Setting::get('default_tahun', date('Y')));
+        $triwulan = $request->get('triwulan', \App\Models\Setting::get('default_triwulan', min(ceil(date('n') / 3), 4)));
         
         $user = auth()->user();
         

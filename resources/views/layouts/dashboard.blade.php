@@ -458,6 +458,13 @@
                     </a>
                 @endif
 
+                @if (auth()->user()->isAdmin())
+                    <a href="{{ route('anggaran.index') }}"
+                        class="nav-link {{ request()->routeIs('anggaran.*') ? 'active' : '' }}" data-title="Master Anggaran">
+                        <i class="fas fa-money-bill-wave"></i> <span class="link-text">Master Anggaran</span>
+                    </a>
+                @endif
+
                 <a href="{{ route('kegiatan-master.index') }}"
                     class="nav-link {{ request()->routeIs('kegiatan-master.*') ? 'active' : '' }}"
                     data-title="{{ auth()->user()->isAdmin() ? 'Master Kegiatan' : 'Kegiatan Saya' }}">
@@ -877,15 +884,26 @@
                             onAction: function() {
                                 editor.windowManager.open({
                                     title: 'Insert LaTeX Formula',
+                                    size: 'normal',
                                     body: {
                                         type: 'panel',
                                         items: [{
                                             type: 'textarea',
                                             name: 'latex',
                                             label: 'LaTeX Syntax (e.g. \\frac{n}{N} \\times 100%)'
+                                        },
+                                        {
+                                            type: 'htmlpanel',
+                                            html: '<div style="margin-top:15px; font-size:12px; font-weight:bold; color:#6c757d; margin-bottom:8px;">PREVIEW</div><div id="latex-preview" style="min-height:80px; padding:15px; border:1px solid #dee2e6; border-radius:8px; background:#fff; display:flex; align-items:center; justify-content:center; overflow-x:auto;"><em>Ketik syntax lalu tekan Preview atau klik di luar kotak.</em></div>'
                                         }]
                                     },
                                     buttons: [{
+                                            type: 'custom',
+                                            name: 'previewBtn',
+                                            text: 'Preview',
+                                            primary: false
+                                        },
+                                        {
                                             type: 'cancel',
                                             text: 'Close'
                                         },
@@ -895,10 +913,31 @@
                                             primary: true
                                         }
                                     ],
+                                    onAction: function(api, details) {
+                                        if (details.name === 'previewBtn') {
+                                            const data = api.getData();
+                                            const previewEl = document.getElementById('latex-preview');
+                                            if (previewEl && window.MathJax) {
+                                                previewEl.innerHTML = '\\(' + (data.latex || '') + '\\)';
+                                                if (MathJax.typesetPromise) {
+                                                    MathJax.typesetPromise([previewEl]).catch(err => console.error(err));
+                                                }
+                                            }
+                                        }
+                                    },
+                                    onChange: function(api) {
+                                        const data = api.getData();
+                                        const previewEl = document.getElementById('latex-preview');
+                                        if (previewEl && window.MathJax) {
+                                            previewEl.innerHTML = '\\(' + (data.latex || '') + '\\)';
+                                            if (MathJax.typesetPromise) {
+                                                MathJax.typesetPromise([previewEl]).catch(err => console.error(err));
+                                            }
+                                        }
+                                    },
                                     onSubmit: function(api) {
                                         const data = api.getData();
-                                        editor.insertContent('\\(' + data
-                                            .latex + '\\)');
+                                        editor.insertContent('\\(' + data.latex + '\\)');
                                         api.close();
                                     }
                                 });

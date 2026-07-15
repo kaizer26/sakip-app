@@ -14,6 +14,7 @@ class Pegawai extends Model
         'nama',
         'email_bps',
         'jabatan',
+        'pangkat_golongan',
         'unit_kerja',
         'status',
         'seksi',

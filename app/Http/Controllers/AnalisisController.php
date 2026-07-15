@@ -13,7 +13,7 @@ class AnalisisController extends Controller
 {
     public function index(Request $request)
     {
-        $triwulan = $request->get('triwulan');
+        $triwulan = $request->get('triwulan', \App\Models\Setting::get('default_triwulan', ceil(date('n') / 3)));
         $query = Analisis::with('indikator');
         if ($triwulan) {
             $query->where('triwulan', $triwulan);
@@ -25,7 +25,7 @@ class AnalisisController extends Controller
     public function create()
     {
         $indikators = Indikator::all();
-        $pegawais = Pegawai::orderBy('nama')->get();
+        $pegawais = Pegawai::orderBy('pangkat_golongan', 'desc')->orderBy('nip', 'asc')->get();
         return view('analisis.create', compact('indikators', 'pegawais'));
     }
 
@@ -48,7 +48,7 @@ class AnalisisController extends Controller
     public function edit(Analisis $analisi)
     {
         $indikators = Indikator::all();
-        $pegawais = Pegawai::orderBy('nama')->get();
+        $pegawais = Pegawai::orderBy('pangkat_golongan', 'desc')->orderBy('nip', 'asc')->get();
         return view('analisis.edit', compact('analisi', 'indikators', 'pegawais'));
     }
 

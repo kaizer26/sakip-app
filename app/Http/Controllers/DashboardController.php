@@ -9,8 +9,8 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $tahun = $request->get('tahun', date('Y'));
-        $triwulan = $request->get('triwulan', 1);
+        $tahun = $request->get('tahun', \App\Models\Setting::get('default_tahun', date('Y')));
+        $triwulan = $request->get('triwulan', \App\Models\Setting::get('default_triwulan', ceil(date('n') / 3)));
         $user = auth()->user();
         $pegawai_id = $user->pegawai_id;
         
@@ -62,7 +62,7 @@ class DashboardController extends Controller
                     ->with(['target', 'realisasis'])
                     ->get();
                     
-                $pegawais = \App\Models\Pegawai::orderBy('nama')->get();
+                $pegawais = \App\Models\Pegawai::orderBy('pangkat_golongan', 'desc')->orderBy('nip', 'asc')->get();
             }
 
             $summary = [
