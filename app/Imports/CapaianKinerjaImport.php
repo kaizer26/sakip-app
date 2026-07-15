@@ -79,19 +79,36 @@ class CapaianKinerjaImport implements ToCollection, WithHeadingRow
 
             if (count($kendalas) > 0 || count($solusis) > 0 || count($rtls) > 0) {
                 // Hapus data lama agar tidak dobel saat re-import
-                \App\Models\TindakLanjut::where('analisis_id', $analisis->id)->delete();
+                $oldIssues = \App\Models\Issue::where('indikator_id', $indikator->id)
+                    ->where('triwulan', $this->triwulan)
+                    ->where('tahun', $this->tahun)
+                    ->get();
+                foreach ($oldIssues as $oi) {
+                    $oi->rtls()->delete();
+                    $oi->delete();
+                }
 
                 $maxCount = max(count($kendalas), count($solusis), count($rtls));
                 for ($i = 0; $i < $maxCount; $i++) {
-                    \App\Models\TindakLanjut::create([
-                        'analisis_id' => $analisis->id,
-                        'kendala' => $kendalas[$i] ?? null,
-                        'solusi' => $solusis[$i] ?? null,
-                        'rtl' => $rtls[$i] ?? null,
-                        'pic' => $row['pic_tindak_lanjut'] ?? null,
-                        'batas_waktu' => $batasWaktu,
-                        'status' => 'Belum Selesai',
+                    $issue = \App\Models\Issue::create([
+                        'indikator_id' => $indikator->id,
+                        'triwulan' => $this->triwulan,
+                        'tahun' => $this->tahun,
+                        'status_kendala' => 'Open',
+                        'deskripsi' => $kendalas[$i] ?? '-',
+                        'solusi_sementara' => $solusis[$i] ?? null,
+                        'pegawai_nip' => auth()->user()->pegawai ? auth()->user()->pegawai->nip : null,
                     ]);
+                    
+                    if (!empty($rtls[$i])) {
+                        \App\Models\Rtl::create([
+                            'issue_id' => $issue->id,
+                            'deskripsi_rtl' => $rtls[$i],
+                            'pic_nip' => $row['pic_tindak_lanjut'] ?? null,
+                            'due_date' => $batasWaktu,
+                            'status_rtl' => 'Belum Selesai',
+                        ]);
+                    }
                 }
             }
         }

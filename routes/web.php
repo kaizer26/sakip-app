@@ -87,6 +87,8 @@ Route::middleware(['auth'])->group(function () {
     // Template Word
     Route::get('/template-word', [App\Http\Controllers\TemplateWordController::class, 'index'])->name('template.word.index');
     Route::post('/template-word/export-notulen', [App\Http\Controllers\TemplateWordController::class, 'exportNotulenCapaian'])->name('template.word.export.notulen');
+    Route::post('/template-word/export-undangan', [App\Http\Controllers\TemplateWordController::class, 'exportSuratUndangan'])->name('template.word.export.undangan');
+    Route::post('/template-word/export-daftar-hadir', [App\Http\Controllers\TemplateWordController::class, 'exportDaftarHadir'])->name('template.word.export.daftar-hadir');
 
     // Master RO
     Route::post('tabel-ro/import', [App\Http\Controllers\TabelRoController::class, 'import'])->name('tabel-ro.import');

@@ -163,7 +163,7 @@
                                 @php
                                     $target = $i->target;
                                     $realisasis = $i->realisasis;
-                                    $kendalas = $i->analisis->pluck('kendala')->filter()->unique();
+                                    $kendalas = $i->issues->pluck('deskripsi')->filter()->unique();
                                 @endphp
                                 <tr class="row-indikator">
                                     <td class="sticky-col-1">{{ $globalNo++ }}</td>

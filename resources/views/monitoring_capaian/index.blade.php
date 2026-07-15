@@ -60,8 +60,9 @@
                                 $capaian = $capaians->get($ind->id);
                                 $realisasi = $ind->realisasis->first();
                                 $analisis = $ind->analisis->first();
-                                $hasTindakLanjut = $analisis && $analisis->tindakLanjuts->isNotEmpty();
-                                $firstTl = $hasTindakLanjut ? $analisis->tindakLanjuts->first() : null;
+                                $hasTindakLanjut = $ind->issues->isNotEmpty();
+                                $firstTl = $hasTindakLanjut ? $ind->issues->first() : null;
+                                $firstRtl = $firstTl ? $firstTl->rtls->first() : null;
                                 
                                 $isComplete = function($val) {
                                     return ($val !== null && $val !== '' && $val !== false) 
@@ -92,12 +93,12 @@
                                 <td class="text-center">{!! $isComplete($capaian->argumen_logis ?? null) !!}</td>
                                 <td class="text-center">{!! $isComplete($capaian->penjelasan_lainnya ?? null) !!}</td>
                                 
-                                <td class="text-center">{!! $isComplete($firstTl->kendala ?? null) !!}</td>
-                                <td class="text-center">{!! $isComplete($firstTl->solusi ?? null) !!}</td>
-                                <td class="text-center">{!! $isComplete($firstTl->rtl ?? null) !!}</td>
+                                <td class="text-center">{!! $isComplete($firstTl->deskripsi ?? null) !!}</td>
+                                <td class="text-center">{!! $isComplete($firstTl->solusi_sementara ?? null) !!}</td>
+                                <td class="text-center">{!! $isComplete($firstRtl->deskripsi_rtl ?? null) !!}</td>
                                 <td class="text-center">
                                     @php
-                                        $picBatas = ($firstTl->pic ?? null) && ($firstTl->batas_waktu ?? null);
+                                        $picBatas = ($firstRtl->pic_nip ?? null) && ($firstRtl->due_date ?? null);
                                     @endphp
                                     {!! $isComplete($picBatas) !!}
                                 </td>

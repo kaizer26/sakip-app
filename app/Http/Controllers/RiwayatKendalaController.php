@@ -10,16 +10,14 @@ class RiwayatKendalaController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = TindakLanjut::with(['analisis.indikator', 'analisis.pegawai']);
+        $query = \App\Models\Issue::with(['indikator', 'pegawai', 'rtls']);
 
         if (!$user->isAdmin()) {
             $pegawaiNip = $user->pegawai->nip ?? $user->pegawai->email_bps ?? null;
             if (!$pegawaiNip) {
                 return redirect()->back()->with('error', 'Profil pegawai Anda belum lengkap.');
             }
-            $query->whereHas('analisis', function($q) use ($pegawaiNip) {
-                $q->where('pegawai_nip', $pegawaiNip);
-            });
+            $query->where('pegawai_nip', $pegawaiNip);
         }
 
         $riwayatKendala = $query->latest()->get();
@@ -37,23 +35,38 @@ class RiwayatKendalaController extends Controller
             'batas_waktu' => 'nullable|date',
         ]);
 
-        $tl = TindakLanjut::findOrFail($id);
+        $tl = \App\Models\Issue::findOrFail($id);
         
         $user = auth()->user();
         if (!$user->isAdmin()) {
             $pegawaiNip = $user->pegawai->nip ?? $user->pegawai->email_bps ?? null;
-            if ($tl->analisis->pegawai_nip !== $pegawaiNip) {
+            if ($tl->pegawai_nip !== $pegawaiNip) {
                 abort(403, 'Unauthorized action.');
             }
         }
 
         $tl->update([
-            'kendala' => $validated['kendala'],
-            'solusi' => $validated['solusi'] ?? null,
-            'rtl' => $validated['rencana_tindak_lanjut'] ?? null,
-            'pic' => $validated['pic_tindak_lanjut'] ?? null,
-            'batas_waktu' => $validated['batas_waktu'] ?? null,
+            'deskripsi' => $validated['kendala'],
+            'solusi_sementara' => $validated['solusi'] ?? null,
         ]);
+        
+        $rtl = $tl->rtls()->first();
+        if ($rtl || !empty($validated['rencana_tindak_lanjut'])) {
+            if (!$rtl) {
+                $tl->rtls()->create([
+                    'deskripsi_rtl' => $validated['rencana_tindak_lanjut'] ?? '',
+                    'pic_nip' => $validated['pic_tindak_lanjut'] ?? null,
+                    'due_date' => $validated['batas_waktu'] ?? null,
+                    'status_rtl' => 'Belum Selesai',
+                ]);
+            } else {
+                $rtl->update([
+                    'deskripsi_rtl' => $validated['rencana_tindak_lanjut'] ?? '',
+                    'pic_nip' => $validated['pic_tindak_lanjut'] ?? null,
+                    'due_date' => $validated['batas_waktu'] ?? null,
+                ]);
+            }
+        }
 
         return redirect()->back()->with('success', 'Riwayat kendala berhasil diperbarui.');
     }

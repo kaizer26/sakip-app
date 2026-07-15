@@ -12,7 +12,7 @@ class CapaianController extends Controller
     {
         $tahun = $request->get('tahun', date('Y'));
         
-        $indicators = Indikator::with(['target', 'realisasis', 'kegiatanMasters', 'analisis'])
+        $indicators = Indikator::with(['target', 'realisasis', 'kegiatanMasters', 'analisis', 'issues'])
             ->where('tahun', $tahun)
             ->get();
 

@@ -46,17 +46,29 @@ class PublicInputController extends Controller
             ]
         );
         
+        $tahun = $request->input('tahun', date('Y'));
+
         // Loop through kendalas
         foreach ($validated['kendala'] as $index => $kendalaText) {
-            \App\Models\TindakLanjut::create([
-                'analisis_id' => $analisis->id,
-                'kendala' => $kendalaText,
-                'solusi' => $validated['solusi'][$index] ?? null,
-                'rtl' => $isKetuaTim ? ($validated['rencana_tindak_lanjut'][$index] ?? null) : null,
-                'pic' => $isKetuaTim ? ($validated['pic_tindak_lanjut'][$index] ?? null) : ($pegawai->nama),
-                'batas_waktu' => $isKetuaTim ? ($validated['batas_waktu'][$index] ?? null) : null,
-                'status' => 'Belum Selesai',
+            $issue = \App\Models\Issue::create([
+                'indikator_id' => $validated['indikator_id'],
+                'triwulan' => $validated['triwulan'],
+                'tahun' => $tahun,
+                'status_kendala' => 'Open',
+                'deskripsi' => $kendalaText,
+                'solusi_sementara' => $validated['solusi'][$index] ?? null,
+                'pegawai_nip' => $validated['pegawai_nip'],
             ]);
+
+            if ($isKetuaTim && !empty($validated['rencana_tindak_lanjut'][$index])) {
+                \App\Models\Rtl::create([
+                    'issue_id' => $issue->id,
+                    'deskripsi_rtl' => $validated['rencana_tindak_lanjut'][$index],
+                    'pic_nip' => $validated['pic_tindak_lanjut'][$index] ?? $pegawai->nip,
+                    'due_date' => $validated['batas_waktu'][$index] ?? null,
+                    'status_rtl' => 'Belum Selesai',
+                ]);
+            }
         }
 
         return redirect()->back()->with('success', 'Laporan kendala berhasil dikirim.');

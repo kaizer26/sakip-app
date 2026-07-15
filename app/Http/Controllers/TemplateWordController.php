@@ -43,8 +43,10 @@ class TemplateWordController extends Controller
         $templateProcessor = new TemplateProcessor($templatePath);
 
         // Replace tag umum
-        $triwulans = ['', 'I', 'II', 'III', 'IV'];
+        $triwulans = ['', 'TRIWULAN I', 'TRIWULAN II', 'TRIWULAN III', 'TRIWULAN IV'];
+        $triwulans1 = ['', 'Triwulan I', 'Triwulan II', 'Triwulan III', 'Triwulan IV'];
         $templateProcessor->setValue('triwulan_upper', $triwulans[$validated['triwulan']]);
+        $templateProcessor->setValue('triwulan_proper', $triwulans1[$validated['triwulan']]);
         $templateProcessor->setValue('tahun', $validated['tahun']);
         $templateProcessor->setValue('triwulan', $validated['triwulan']);
         $templateProcessor->setValue('hari_tanggal', $formattedDate);
@@ -56,14 +58,14 @@ class TemplateWordController extends Controller
         $templateProcessor->setValue('kepala', $pimpinan->nama);
         $templateProcessor->setValue('notulis', $notulis->nama);
         $indikators = Indikator::with([
-            'target', 
-            'realisasis' => function($q) use ($validated) {
+            'target',
+            'realisasis' => function ($q) use ($validated) {
                 $q->where('triwulan', $validated['triwulan']);
             },
-            'analisis' => function($q) use ($validated) {
+            'analisis' => function ($q) use ($validated) {
                 $q->where('triwulan', $validated['triwulan']);
             },
-            'tabelRos' => function($q) use ($validated) {
+            'tabelRos' => function ($q) use ($validated) {
                 $q->where('tahun', $validated['tahun'])->where('triwulan', $validated['triwulan']);
             }
         ])->get();
@@ -107,11 +109,11 @@ class TemplateWordController extends Controller
 
             $templateProcessor->setValue("definisi_x#{$blockIdx}", $indikator->definisi_x ?? '-');
             $templateProcessor->setValue("definisi_y#{$blockIdx}", $indikator->definisi_y ?? '-');
-            
+
             $real_x = $realisasi ? $realisasi->realisasi_x : '-';
             $real_y = $realisasi ? $realisasi->realisasi_y : '-';
             $capaian = $realisasi ? $realisasi->realisasi_kumulatif : 0;
-            
+
             $targetTahunan = $indikator->target_tahunan ?? 0;
             $capaian_triwulan = (is_numeric($target) && $target > 0) ? round(($capaian / $target) * 100, 2) : 0;
             $capaian_tahunan = (is_numeric($targetTahunan) && $targetTahunan > 0) ? round(($capaian / $targetTahunan) * 100, 2) : 0;
@@ -135,7 +137,7 @@ class TemplateWordController extends Controller
             $templateProcessor->setValue("rencana_tindak_lanjut#{$blockIdx}", $tindakLanjut);
             $templateProcessor->setValue("pic_tindak_lanjut#{$blockIdx}", $indikator->pic_tindak_lanjut ?? '-');
             $templateProcessor->setValue("batas_waktu#{$blockIdx}", $indikator->batas_waktu ?? '-');
-            
+
             $basisData = $indikator->basis_data ? html_entity_decode(strip_tags($indikator->basis_data)) : '-';
             $templateProcessor->setValue("basis_data#{$blockIdx}", $basisData);
             $templateProcessor->setValue("basis_data_baseline#{$blockIdx}", $basisData);
@@ -155,34 +157,48 @@ class TemplateWordController extends Controller
 
             // Rincian Output (Tabel RO via cloneRow)
             $tabelRos = $indikator->tabelRos;
+            $roCloned = false;
             try {
                 $templateProcessor->cloneRow("ro#{$blockIdx}", count($tabelRos) > 0 ? count($tabelRos) : 1);
+                $roCloned = true;
             } catch (\PhpOffice\PhpWord\Exception\Exception $e) {
-                return redirect()->back()->with('error', "Gagal memproses tabel Rincian Output. Pastikan tag \${ro} berada di dalam sebuah tabel dan diketik tanpa ada spasi atau format tebal/miring sebagian.");
+                // Ignore cloneRow failure, we will replace the raw block tags with '-'
             }
-            
-            if (count($tabelRos) > 0) {
-                foreach ($tabelRos as $outIndex => $tRo) {
-                    $rowIdx = $outIndex + 1;
-                    
-                    $templateProcessor->setValue("no_ro#{$blockIdx}#{$rowIdx}", $rowIdx . '.');
-                    $templateProcessor->setValue("ro#{$blockIdx}#{$rowIdx}", $tRo->ro);
-                    $templateProcessor->setValue("realisasi_volume_ro#{$blockIdx}#{$rowIdx}", $tRo->realisasi_volume_ro);
-                    $templateProcessor->setValue("progres_ro#{$blockIdx}#{$rowIdx}", $tRo->progres_ro);
-                    $templateProcessor->setValue("pagu_awal#{$blockIdx}#{$rowIdx}", number_format($tRo->pagu_awal, 0, ',', '.'));
-                    $templateProcessor->setValue("pagu_revisi#{$blockIdx}#{$rowIdx}", number_format($tRo->pagu_revisi, 0, ',', '.'));
-                    $templateProcessor->setValue("pagu_sisa#{$blockIdx}#{$rowIdx}", number_format($tRo->pagu_sisa, 0, ',', '.'));
-                    $templateProcessor->setValue("pagu_realisasi#{$blockIdx}#{$rowIdx}", number_format($tRo->pagu_realisasi, 0, ',', '.'));
+
+            if ($roCloned) {
+                if (count($tabelRos) > 0) {
+                    foreach ($tabelRos as $outIndex => $tRo) {
+                        $rowIdx = $outIndex + 1;
+
+                        $templateProcessor->setValue("no_ro#{$blockIdx}#{$rowIdx}", $rowIdx . '.');
+                        $templateProcessor->setValue("ro#{$blockIdx}#{$rowIdx}", $tRo->ro);
+                        $templateProcessor->setValue("realisasi_volume_ro#{$blockIdx}#{$rowIdx}", $tRo->realisasi_volume_ro);
+                        $templateProcessor->setValue("progres_ro#{$blockIdx}#{$rowIdx}", $tRo->progres_ro);
+                        $templateProcessor->setValue("pagu_awal#{$blockIdx}#{$rowIdx}", number_format($tRo->pagu_awal, 0, ',', '.'));
+                        $templateProcessor->setValue("pagu_revisi#{$blockIdx}#{$rowIdx}", number_format($tRo->pagu_revisi, 0, ',', '.'));
+                        $templateProcessor->setValue("pagu_sisa#{$blockIdx}#{$rowIdx}", number_format($tRo->pagu_sisa, 0, ',', '.'));
+                        $templateProcessor->setValue("pagu_realisasi#{$blockIdx}#{$rowIdx}", number_format($tRo->pagu_realisasi, 0, ',', '.'));
+                    }
+                } else {
+                    $templateProcessor->setValue("no_ro#{$blockIdx}#1", '-');
+                    $templateProcessor->setValue("ro#{$blockIdx}#1", '-');
+                    $templateProcessor->setValue("realisasi_volume_ro#{$blockIdx}#1", '-');
+                    $templateProcessor->setValue("progres_ro#{$blockIdx}#1", '-');
+                    $templateProcessor->setValue("pagu_awal#{$blockIdx}#1", '-');
+                    $templateProcessor->setValue("pagu_revisi#{$blockIdx}#1", '-');
+                    $templateProcessor->setValue("pagu_sisa#{$blockIdx}#1", '-');
+                    $templateProcessor->setValue("pagu_realisasi#{$blockIdx}#1", '-');
                 }
             } else {
-                $templateProcessor->setValue("no_ro#{$blockIdx}#1", '-');
-                $templateProcessor->setValue("ro#{$blockIdx}#1", '-');
-                $templateProcessor->setValue("realisasi_volume_ro#{$blockIdx}#1", '-');
-                $templateProcessor->setValue("progres_ro#{$blockIdx}#1", '-');
-                $templateProcessor->setValue("pagu_awal#{$blockIdx}#1", '-');
-                $templateProcessor->setValue("pagu_revisi#{$blockIdx}#1", '-');
-                $templateProcessor->setValue("pagu_sisa#{$blockIdx}#1", '-');
-                $templateProcessor->setValue("pagu_realisasi#{$blockIdx}#1", '-');
+                // If cloneRow failed, the tags still exist without the row suffix
+                $templateProcessor->setValue("no_ro#{$blockIdx}", '-');
+                $templateProcessor->setValue("ro#{$blockIdx}", '-');
+                $templateProcessor->setValue("realisasi_volume_ro#{$blockIdx}", '-');
+                $templateProcessor->setValue("progres_ro#{$blockIdx}", '-');
+                $templateProcessor->setValue("pagu_awal#{$blockIdx}", '-');
+                $templateProcessor->setValue("pagu_revisi#{$blockIdx}", '-');
+                $templateProcessor->setValue("pagu_sisa#{$blockIdx}", '-');
+                $templateProcessor->setValue("pagu_realisasi#{$blockIdx}", '-');
             }
         }
 
@@ -192,27 +208,37 @@ class TemplateWordController extends Controller
         });
 
         if ($sasarans->count() > 0) {
+            $sasaranCloned = false;
             try {
                 $templateProcessor->cloneRow('sasaran', $sasarans->count());
+                $sasaranCloned = true;
             } catch (\PhpOffice\PhpWord\Exception\Exception $e) {
-                return redirect()->back()->with('error', "Gagal memproses tabel Efisiensi. Pastikan tag \${sasaran} (di tabel paling bawah) berada di dalam sebuah tabel dan diketik tanpa ada spasi atau format yang rusak.");
+                // Ignore cloneRow failure
             }
-            $idx = 1;
-            foreach ($sasarans as $sasaranName => $inds) {
-                $sumAwal = 0;
-                $sumRevisi = 0;
-                $sumRealisasi = 0;
-                foreach ($inds as $ind) {
-                    $sumAwal += $ind->tabelRos->sum('pagu_awal');
-                    $sumRevisi += $ind->tabelRos->sum('pagu_revisi');
-                    $sumRealisasi += $ind->tabelRos->sum('pagu_realisasi');
-                }
 
-                $templateProcessor->setValue("sasaran#{$idx}", $sasaranName);
-                $templateProcessor->setValue("pagu_awal_sasaran#{$idx}", number_format($sumAwal, 0, ',', '.'));
-                $templateProcessor->setValue("pagu_revisi_sasaran#{$idx}", number_format($sumRevisi, 0, ',', '.'));
-                $templateProcessor->setValue("pagu_realisasi_sasaran#{$idx}", number_format($sumRealisasi, 0, ',', '.'));
-                $idx++;
+            if ($sasaranCloned) {
+                $idx = 1;
+                foreach ($sasarans as $sasaranName => $inds) {
+                    $sumAwal = 0;
+                    $sumRevisi = 0;
+                    $sumRealisasi = 0;
+                    foreach ($inds as $ind) {
+                        $sumAwal += $ind->tabelRos->sum('pagu_awal');
+                        $sumRevisi += $ind->tabelRos->sum('pagu_revisi');
+                        $sumRealisasi += $ind->tabelRos->sum('pagu_realisasi');
+                    }
+
+                    $templateProcessor->setValue("sasaran#{$idx}", $sasaranName);
+                    $templateProcessor->setValue("pagu_awal_sasaran#{$idx}", number_format($sumAwal, 0, ',', '.'));
+                    $templateProcessor->setValue("pagu_revisi_sasaran#{$idx}", number_format($sumRevisi, 0, ',', '.'));
+                    $templateProcessor->setValue("pagu_realisasi_sasaran#{$idx}", number_format($sumRealisasi, 0, ',', '.'));
+                    $idx++;
+                }
+            } else {
+                $templateProcessor->setValue('sasaran', '-');
+                $templateProcessor->setValue('pagu_awal_sasaran', '-');
+                $templateProcessor->setValue('pagu_revisi_sasaran', '-');
+                $templateProcessor->setValue('pagu_realisasi_sasaran', '-');
             }
         } else {
             $templateProcessor->setValue('sasaran', '-');
@@ -226,5 +252,90 @@ class TemplateWordController extends Controller
         $templateProcessor->saveAs($tempPath);
 
         return response()->download($tempPath)->deleteFileAfterSend(true);
+    }
+
+    public function exportSuratUndangan(Request $request)
+    {
+        $validated = $request->validate([
+            'nomor_surat' => 'required|string',
+            'sifat_surat' => 'required|string',
+            'lampiran' => 'required|string',
+            'perihal' => 'required|string',
+            'tgl_surat' => 'required|date',
+            'undangan' => 'required|string',
+            'isi_undangan' => 'required|string',
+            'hari_tanggal_kegiatan' => 'required|date',
+            'waktu_kegiatan' => 'required|string',
+            'tempat_kegiatan' => 'required|string',
+            'agend_kegiatan' => 'required|string', // typo in user template
+        ]);
+
+        \Carbon\Carbon::setLocale('id');
+        $tgl_surat = \Carbon\Carbon::parse($validated['tgl_surat'])->translatedFormat('d F Y');
+        $hari_tanggal_kegiatan = \Carbon\Carbon::parse($validated['hari_tanggal_kegiatan'])->translatedFormat('l, d F Y');
+
+        $templatePath = storage_path('app/templates/surat_undangan_rapat.docx');
+        if (!file_exists($templatePath)) {
+            return redirect()->back()->with('error', 'File template Surat Undangan (surat_undangan_rapat.docx) tidak ditemukan di folder storage/app/templates.');
+        }
+
+        $templateProcessor = new TemplateProcessor($templatePath);
+
+        // Standard string replaces
+        $templateProcessor->setValue('nomor_surat', htmlspecialchars($validated['nomor_surat']));
+        $templateProcessor->setValue('sifat_surat', htmlspecialchars($validated['sifat_surat']));
+        $templateProcessor->setValue('lampiran', htmlspecialchars($validated['lampiran']));
+        $templateProcessor->setValue('perihal', htmlspecialchars($validated['perihal']));
+        $templateProcessor->setValue('tgl_surat', $tgl_surat);
+        $templateProcessor->setValue('hari_tanggal_kegiatan', $hari_tanggal_kegiatan);
+        $templateProcessor->setValue('waktu_kegiatan', htmlspecialchars($validated['waktu_kegiatan']));
+        $templateProcessor->setValue('tempat_kegiatan', htmlspecialchars($validated['tempat_kegiatan']));
+
+        // Multi-line values
+        // Convert HTML from TinyMCE to Word line breaks for undangan
+        $undanganHtml = $validated['undangan'];
+        $undanganHtml = str_replace(['<br>', '<br/>', '<br />', '</p>'], "\n", $undanganHtml);
+        $undanganHtml = strip_tags($undanganHtml);
+        $undanganHtml = preg_replace("/\n\n+/", "\n\n", trim($undanganHtml));
+        $undanganFormatted = str_replace("\n", '</w:t><w:br/><w:t>', htmlspecialchars($undanganHtml));
+        $templateProcessor->setValue('undangan', $undanganFormatted);
+
+        // Convert HTML from TinyMCE to Word line breaks for isi_undangan
+        $isiUndanganHtml = $validated['isi_undangan'];
+        $isiUndanganHtml = str_replace(['<br>', '<br/>', '<br />', '</p>'], "\n", $isiUndanganHtml);
+        $isiUndanganHtml = strip_tags($isiUndanganHtml);
+        // Clean up excessive newlines
+        $isiUndanganHtml = preg_replace("/\n\n+/", "\n\n", trim($isiUndanganHtml));
+        $isiUndanganFormatted = str_replace("\n", '</w:t><w:br/><w:t>', htmlspecialchars($isiUndanganHtml));
+        $templateProcessor->setValue('isi_undangan', $isiUndanganFormatted);
+
+        $agendaFormatted = str_replace("\n", '</w:t><w:br/><w:t>', htmlspecialchars($validated['agend_kegiatan']));
+        $templateProcessor->setValue('agend_kegiatan', $agendaFormatted);
+
+        $fileName = 'Surat_Undangan_' . time() . '.docx';
+        $tempPath = storage_path('app/public/' . $fileName);
+        $templateProcessor->saveAs($tempPath);
+
+        return response()->download($tempPath)->deleteFileAfterSend(true);
+    }
+
+    public function exportDaftarHadir(Request $request)
+    {
+        $validated = $request->validate([
+            'judul_kegiatan' => 'required|string',
+            'tanggal_kegiatan' => 'required|date',
+            'pimpinan_id' => 'required|exists:pegawais,id',
+            'pembuat_id' => 'required|exists:pegawais,id',
+            'jumlah_baris' => 'required|integer|min:1|max:100'
+        ]);
+
+        $pimpinan = Pegawai::find($validated['pimpinan_id']);
+        $pembuat = Pegawai::find($validated['pembuat_id']);
+        $jumlah_baris = $validated['jumlah_baris'];
+
+        \Carbon\Carbon::setLocale('id');
+        $tanggal = \Carbon\Carbon::parse($validated['tanggal_kegiatan'])->translatedFormat('d F Y');
+
+        return view('template_word.daftar_hadir', compact('validated', 'tanggal', 'pimpinan', 'pembuat', 'jumlah_baris'));
     }
 }

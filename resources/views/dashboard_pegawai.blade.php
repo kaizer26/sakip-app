@@ -299,6 +299,7 @@
             <input type="hidden" name="indikator_id" class="hidden-iku">
             <input type="hidden" name="kegiatan_id" class="hidden-kegiatan">
             <input type="hidden" name="triwulan" value="{{ $triwulan }}">
+            <input type="hidden" name="tahun" value="{{ $tahun }}">
             <div class="modal-header border-0 pb-0">
                 <h5 class="modal-title fw-bold">Laporkan Kendala</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -327,26 +328,41 @@
                             <label class="form-label small fw-bold mb-1">Kendala yang Dihadapi</label>
                             <textarea name="kendala[]" class="form-control rounded-3" rows="2" placeholder="Jelaskan hambatan secara spesifik..." required></textarea>
                         </div>
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold mb-1">Solusi yang Dilakukan</label>
-                                <textarea name="solusi[]" class="form-control rounded-3" rows="2" placeholder="Apa yang sudah dilakukan?"></textarea>
-                            </div>
-                            <div class="col-md-6 rtl-field">
-                                <label class="form-label small fw-bold mb-1">Rencana Tindak Lanjut</label>
-                                <textarea name="rencana_tindak_lanjut[]" class="form-control rounded-3" rows="2" placeholder="Apa rencana ke depan?"></textarea>
+                        
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill" onclick="$(this).closest('.kendala-row').find('.solusi-collapse').collapse('toggle')">
+                                <i class="fas fa-plus"></i> Tambah Solusi yang Telah Dilakukan
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-warning text-dark rounded-pill" onclick="$(this).closest('.kendala-row').find('.rtl-collapse').collapse('toggle')">
+                                <i class="fas fa-plus"></i> Buat Rencana Tindak Lanjut (RTL)
+                            </button>
+                        </div>
+
+                        <div class="collapse solusi-collapse mb-3">
+                            <div class="p-3 border rounded-3 bg-success bg-opacity-10 border-success-subtle">
+                                <label class="form-label small fw-bold text-success mb-1">Solusi yang Telah Dilakukan</label>
+                                <textarea name="solusi[]" class="form-control rounded-3 border-success-subtle" rows="2" placeholder="Apa yang sudah dilakukan?"></textarea>
                             </div>
                         </div>
-                        <div class="row g-3">
-                            <div class="col-md-6 rtl-field">
-                                <label class="form-label small fw-bold mb-1">PIC Tindak Lanjut</label>
-                                <select name="pic_tindak_lanjut[]" class="form-select select2-modal pic_select_kendala">
-                                    <option value="" disabled selected>-- Pilih PIC --</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 rtl-field">
-                                <label class="form-label small fw-bold mb-1">Batas Waktu RTL</label>
-                                <input type="date" name="batas_waktu[]" class="form-control rounded-3">
+
+                        <div class="collapse rtl-collapse">
+                            <div class="p-3 border rounded-3 bg-warning bg-opacity-10 border-warning-subtle">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-dark mb-1">Rencana Tindak Lanjut (RTL)</label>
+                                    <textarea name="rencana_tindak_lanjut[]" class="form-control rounded-3 border-warning-subtle" rows="2" placeholder="Apa rencana ke depan?"></textarea>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6 rtl-field">
+                                        <label class="form-label small fw-bold text-dark mb-1">PIC Tindak Lanjut</label>
+                                        <select name="pic_tindak_lanjut[]" class="form-select select2-modal pic_select_kendala border-warning-subtle">
+                                            <option value="" disabled>-- Pilih PIC --</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 rtl-field">
+                                        <label class="form-label small fw-bold text-dark mb-1">Batas Waktu RTL</label>
+                                        <input type="date" name="batas_waktu[]" class="form-control rounded-3 border-warning-subtle" value="{{ now()->addDays(7)->format('Y-m-d') }}">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

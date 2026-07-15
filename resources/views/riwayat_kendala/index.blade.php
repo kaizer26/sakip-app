@@ -32,6 +32,7 @@
                 </thead>
                 <tbody>
                     @forelse($riwayatKendala as $rk)
+                        @php $rtl = $rk->rtls->first(); @endphp
                         <tr>
                             <td class="text-center">{{ $loop->iteration }}</td>
                             <td>
@@ -44,20 +45,20 @@
                                 </div>
                             </td>
                             <td class="text-center">TW {{ $rk->triwulan }}</td>
-                            <td>{{ $rk->kendala }}</td>
-                            <td>{{ $rk->solusi ?? '-' }}</td>
-                            <td>{{ $rk->rencana_tindak_lanjut ?? '-' }}</td>
-                            <td>{{ $rk->pic_tindak_lanjut ?? '-' }}</td>
-                            <td class="text-center">{{ $rk->batas_waktu ? \Carbon\Carbon::parse($rk->batas_waktu)->format('d/m/Y') : '-' }}</td>
+                            <td>{{ $rk->deskripsi }}</td>
+                            <td>{{ $rk->solusi_sementara ?? '-' }}</td>
+                            <td>{{ $rtl->deskripsi_rtl ?? '-' }}</td>
+                            <td>{{ $rtl->pic_nip ?? '-' }}</td>
+                            <td class="text-center">{{ ($rtl->due_date ?? null) ? \Carbon\Carbon::parse($rtl->due_date)->format('d/m/Y') : '-' }}</td>
                             <td class="text-center">
                                 <button type="button" class="btn btn-sm btn-outline-primary rounded-pill btn-edit" 
                                     data-id="{{ $rk->id }}"
                                     data-triwulan="{{ $rk->triwulan }}"
-                                    data-kendala="{{ $rk->kendala }}"
-                                    data-solusi="{{ $rk->solusi }}"
-                                    data-rtl="{{ $rk->rencana_tindak_lanjut }}"
-                                    data-pic="{{ $rk->pic_tindak_lanjut }}"
-                                    data-batas="{{ $rk->batas_waktu }}"
+                                    data-kendala="{{ $rk->deskripsi }}"
+                                    data-solusi="{{ $rk->solusi_sementara }}"
+                                    data-rtl="{{ $rtl->deskripsi_rtl ?? '' }}"
+                                    data-pic="{{ $rtl->pic_nip ?? '' }}"
+                                    data-batas="{{ $rtl->due_date ?? '' }}"
                                     data-bs-toggle="modal" 
                                     data-bs-target="#editKendalaModal">
                                     <i class="fas fa-edit"></i> Edit
