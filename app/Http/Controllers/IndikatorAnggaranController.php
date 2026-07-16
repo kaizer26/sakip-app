@@ -57,6 +57,10 @@ class IndikatorAnggaranController extends Controller
             'realisasi_tw2' => 'nullable|numeric',
             'realisasi_tw3' => 'nullable|numeric',
             'realisasi_tw4' => 'nullable|numeric',
+            'kode_kegiatan' => 'nullable|string',
+            'nama_kegiatan' => 'nullable|string',
+            'kode_ro' => 'nullable|string',
+            'nama_ro' => 'nullable|string',
         ]);
 
         $anggaran = IndikatorAnggaran::updateOrCreate(
@@ -71,6 +75,10 @@ class IndikatorAnggaranController extends Controller
                 'realisasi_tw2' => $request->realisasi_tw2 ?? 0,
                 'realisasi_tw3' => $request->realisasi_tw3 ?? 0,
                 'realisasi_tw4' => $request->realisasi_tw4 ?? 0,
+                'kode_kegiatan' => $request->kode_kegiatan,
+                'nama_kegiatan' => $request->nama_kegiatan,
+                'kode_ro' => $request->kode_ro,
+                'nama_ro' => $request->nama_ro,
             ]
         );
 
@@ -92,6 +100,10 @@ class IndikatorAnggaranController extends Controller
             'realisasi_tw2' => 'nullable|numeric',
             'realisasi_tw3' => 'nullable|numeric',
             'realisasi_tw4' => 'nullable|numeric',
+            'kode_kegiatan' => 'nullable|string',
+            'nama_kegiatan' => 'nullable|string',
+            'kode_ro' => 'nullable|string',
+            'nama_ro' => 'nullable|string',
         ]);
 
         $anggaran = \App\Models\SasaranAnggaran::updateOrCreate(
@@ -106,6 +118,10 @@ class IndikatorAnggaranController extends Controller
                 'realisasi_tw2' => $request->realisasi_tw2 ?? 0,
                 'realisasi_tw3' => $request->realisasi_tw3 ?? 0,
                 'realisasi_tw4' => $request->realisasi_tw4 ?? 0,
+                'kode_kegiatan' => $request->kode_kegiatan,
+                'nama_kegiatan' => $request->nama_kegiatan,
+                'kode_ro' => $request->kode_ro,
+                'nama_ro' => $request->nama_ro,
             ]
         );
 

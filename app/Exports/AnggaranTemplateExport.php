@@ -55,6 +55,10 @@ class AnggaranTemplateExport implements FromCollection, WithHeadings, WithMappin
                 'realisasi_tw2' => $sAnggaran ? $sAnggaran->realisasi_tw2 : 0,
                 'realisasi_tw3' => $sAnggaran ? $sAnggaran->realisasi_tw3 : 0,
                 'realisasi_tw4' => $sAnggaran ? $sAnggaran->realisasi_tw4 : 0,
+                'kode_kegiatan' => $sAnggaran ? $sAnggaran->kode_kegiatan : '',
+                'nama_kegiatan' => $sAnggaran ? $sAnggaran->nama_kegiatan : '',
+                'kode_ro' => $sAnggaran ? $sAnggaran->kode_ro : '',
+                'nama_ro' => $sAnggaran ? $sAnggaran->nama_ro : '',
             ];
 
             foreach ($group['indikators'] as $ind) {
@@ -69,6 +73,10 @@ class AnggaranTemplateExport implements FromCollection, WithHeadings, WithMappin
                     'realisasi_tw2' => $anggaran ? $anggaran->realisasi_tw2 : 0,
                     'realisasi_tw3' => $anggaran ? $anggaran->realisasi_tw3 : 0,
                     'realisasi_tw4' => $anggaran ? $anggaran->realisasi_tw4 : 0,
+                    'kode_kegiatan' => $anggaran ? $anggaran->kode_kegiatan : '',
+                    'nama_kegiatan' => $anggaran ? $anggaran->nama_kegiatan : '',
+                    'kode_ro' => $anggaran ? $anggaran->kode_ro : '',
+                    'nama_ro' => $anggaran ? $anggaran->nama_ro : '',
                 ];
             }
         }
@@ -88,6 +96,10 @@ class AnggaranTemplateExport implements FromCollection, WithHeadings, WithMappin
             'REALISASI TW2',
             'REALISASI TW3',
             'REALISASI TW4',
+            'KODE KEGIATAN',
+            'NAMA KEGIATAN',
+            'KODE RO',
+            'NAMA RO',
         ];
     }
 
@@ -103,6 +115,10 @@ class AnggaranTemplateExport implements FromCollection, WithHeadings, WithMappin
             $row['realisasi_tw2'],
             $row['realisasi_tw3'],
             $row['realisasi_tw4'],
+            $row['kode_kegiatan'],
+            $row['nama_kegiatan'],
+            $row['kode_ro'],
+            $row['nama_ro'],
         ];
     }
 

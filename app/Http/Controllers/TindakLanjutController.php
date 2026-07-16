@@ -28,7 +28,7 @@ class TindakLanjutController extends Controller
             
         // If not admin, only show RTL assigned to this PIC
         if (!$user->isAdmin()) {
-            $pegawaiNip = $user->pegawai->nip ?? $user->pegawai->email_bps ?? null;
+            $pegawaiNip = $user->pegawai?->nip ?? $user->pegawai?->email_bps ?? $user->email;
             $pegawaiName = $user->pegawai->nama ?? null;
             $query->where(function($q) use ($pegawaiName, $pegawaiNip) {
                 $q->where('pic', $pegawaiName)
@@ -58,7 +58,7 @@ class TindakLanjutController extends Controller
         
         $user = auth()->user();
         if (!$user->isAdmin()) {
-            $pegawaiNip = $user->pegawai->nip ?? $user->pegawai->email_bps ?? null;
+            $pegawaiNip = $user->pegawai?->nip ?? $user->pegawai?->email_bps ?? $user->email;
             $pegawaiName = $user->pegawai->nama ?? null;
             if ($tl->pic !== $pegawaiName && $tl->analisis->pegawai_nip !== $pegawaiNip) {
                 abort(403, 'Unauthorized action.');

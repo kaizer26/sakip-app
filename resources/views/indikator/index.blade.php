@@ -14,6 +14,10 @@
                     <a href="{{ route('indikator.template') }}" class="btn btn-outline-success rounded-pill px-3 ms-2 fw-bold">
                         <i class="fas fa-download me-1"></i> Template
                     </a>
+                    <button type="button" class="btn btn-outline-info rounded-pill px-3 ms-2 fw-bold" data-bs-toggle="modal"
+                        data-bs-target="#modalImportXY">
+                        <i class="fas fa-file-excel me-1"></i> Import Target X/Y
+                    </button>
                 @else
                     <div class="fw-bold text-dark"><i class="fas fa-list-check me-2 text-primary"></i> Daftar Tanggung Jawab
                         Indikator Kinerja</div>
@@ -263,6 +267,24 @@
                                                         placeholder="Misal: Jumlah seluruh Publikasi yang dihasilkan">
                                                 </div>
                                             </div>
+                                            <div class="row g-2 mt-2">
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-bold small">
+                                                        <span class="badge bg-secondary text-white me-1">X</span>
+                                                        Target Tahunan Pembilang (X)
+                                                    </label>
+                                                    <input type="number" step="0.01" name="target_tahunan_x" id="target_tahunan_x"
+                                                        class="form-control form-control-sm rounded-3 shadow-none border-light-subtle">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-bold small">
+                                                        <span class="badge bg-secondary text-white me-1">Y</span>
+                                                        Target Tahunan Penyebut (Y)
+                                                    </label>
+                                                    <input type="number" step="0.01" name="target_tahunan_y" id="target_tahunan_y"
+                                                        class="form-control form-control-sm rounded-3 shadow-none border-light-subtle">
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -446,6 +468,20 @@
                                                 placeholder="Misal: Jumlah seluruh Publikasi">
                                         </div>
                                     </div>
+                                    <div class="row g-2 mt-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">
+                                                Target Tahunan Pembilang (X)
+                                            </label>
+                                            <input type="number" step="0.01" name="target_tahunan_x" class="form-control form-control-sm rounded-3">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">
+                                                Target Tahunan Penyebut (Y)
+                                            </label>
+                                            <input type="number" step="0.01" name="target_tahunan_y" class="form-control form-control-sm rounded-3">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -453,6 +489,41 @@
                     <div class="modal-footer border-0 pt-0">
                         <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnSimpanBaru">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Import Target X/Y -->
+    <div class="modal fade" id="modalImportXY" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Import Target & Definisi X/Y</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('indikator.import-xy') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info border-0 rounded-4 shadow-sm mb-4">
+                            <div class="small fw-bold"><i class="fas fa-info-circle me-1"></i> Silakan unduh template Excel terlebih dahulu, lalu isi data Definisi dan Target X/Y sesuai Kode Indikator.</div>
+                        </div>
+                        <div class="mb-3 text-center">
+                            <a href="{{ route('indikator.template-xy') }}" class="btn btn-outline-success rounded-pill px-4 fw-bold">
+                                <i class="fas fa-download me-1"></i> Download Template X/Y
+                            </a>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Upload File Excel (.xlsx)</label>
+                            <input type="file" name="file" class="form-control rounded-3 border-light-subtle" required accept=".xlsx, .xls, .csv">
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">
+                            <i class="fas fa-upload me-1"></i> Import Data
+                        </button>
                     </div>
                 </form>
             </div>
@@ -519,6 +590,8 @@
                     // Fill Definisi X/Y
                     $('#definisi_x').val(data.definisi_x || '');
                     $('#definisi_y').val(data.definisi_y || '');
+                    $('#target_tahunan_x').val(data.target_tahunan_x || '');
+                    $('#target_tahunan_y').val(data.target_tahunan_y || '');
 
                     // Fill Tautan
                     $('#tautan_dasar_hitung').val(data.dasar_hitung || '');

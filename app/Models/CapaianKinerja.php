@@ -18,6 +18,7 @@ class CapaianKinerja extends Model
         'penjelasan_lainnya',
         'dasar_hitung',
         'argumen_logis',
+        'target_realisasi',
     ];
 
     public function indikator()

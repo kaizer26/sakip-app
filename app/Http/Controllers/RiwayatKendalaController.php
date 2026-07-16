@@ -13,7 +13,7 @@ class RiwayatKendalaController extends Controller
         $query = \App\Models\Issue::with(['indikator', 'pegawai', 'rtls']);
 
         if (!$user->isAdmin()) {
-            $pegawaiNip = $user->pegawai->nip ?? $user->pegawai->email_bps ?? null;
+            $pegawaiNip = $user->pegawai?->nip ?? $user->pegawai?->email_bps ?? $user->email;
             if (!$pegawaiNip) {
                 return redirect()->back()->with('error', 'Profil pegawai Anda belum lengkap.');
             }
@@ -39,7 +39,7 @@ class RiwayatKendalaController extends Controller
         
         $user = auth()->user();
         if (!$user->isAdmin()) {
-            $pegawaiNip = $user->pegawai->nip ?? $user->pegawai->email_bps ?? null;
+            $pegawaiNip = $user->pegawai?->nip ?? $user->pegawai?->email_bps ?? $user->email;
             if ($tl->pegawai_nip !== $pegawaiNip) {
                 abort(403, 'Unauthorized action.');
             }

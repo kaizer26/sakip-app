@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Evaluasi Kinerja')
+@section('title', '')
 
 @section('content')
     <div class="d-flex justify-content-between align-items-end mb-4">
@@ -8,22 +8,26 @@
             <h4 class="fw-bold text-dark mb-1">Evaluasi Kinerja - Triwulan {{ $triwulan }} - {{ $tahun }}</h4>
             <div class="text-muted small">Daftar Indikator Kinerja Utama dan Pelaporan Kendala.</div>
         </div>
-        <form action="{{ route('evaluasi-kinerja.index') }}" method="GET" class="d-flex gap-1">
-            <select name="tahun" class="form-select form-select-sm rounded-pill shadow-sm" onchange="this.form.submit()">
-                @for($i = date('Y') - 2; $i <= date('Y') + 1; $i++)
-                    <option value="{{ $i }}" {{ $tahun == $i ? 'selected' : '' }}>{{ $i }}</option>
-                @endfor
-            </select>
-            <select name="triwulan" class="form-select form-select-sm rounded-pill shadow-sm" onchange="this.form.submit()">
-                <option value="1" {{ $triwulan == 1 ? 'selected' : '' }}>Triwulan 1</option>
-                <option value="2" {{ $triwulan == 2 ? 'selected' : '' }}>Triwulan 2</option>
-                <option value="3" {{ $triwulan == 3 ? 'selected' : '' }}>Triwulan 3</option>
-                <option value="4" {{ $triwulan == 4 ? 'selected' : '' }}>Triwulan 4</option>
-            </select>
-        </form>
+        
     </div>
 
     <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <h6 class="fw-bold text-primary mb-0"><i class="fas fa-list-check me-2"></i>Daftar Indikator Kinerja</h6>
+            <form action="{{ route('evaluasi-kinerja.index') }}" method="GET" class="d-flex gap-2">
+                <select name="tahun" class="form-select form-select-sm rounded-pill px-3 shadow-sm border-light-subtle" onchange="this.form.submit()" style="min-width: 100px;">
+                    @for($i = date('Y') - 2; $i <= date('Y') + 1; $i++)
+                        <option value="{{ $i }}" {{ $tahun == $i ? 'selected' : '' }}>{{ $i }}</option>
+                    @endfor
+                </select>
+                <select name="triwulan" class="form-select form-select-sm rounded-pill px-3 shadow-sm border-light-subtle" onchange="this.form.submit()" style="min-width: 130px;">
+                    <option value="1" {{ $triwulan == 1 ? 'selected' : '' }}>Triwulan 1</option>
+                    <option value="2" {{ $triwulan == 2 ? 'selected' : '' }}>Triwulan 2</option>
+                    <option value="3" {{ $triwulan == 3 ? 'selected' : '' }}>Triwulan 3</option>
+                    <option value="4" {{ $triwulan == 4 ? 'selected' : '' }}>Triwulan 4</option>
+                </select>
+            </form>
+        </div>
         <div class="card-body p-2">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0 p-2" id="evaluasiTable" style="font-size: 0.9rem;">
@@ -150,7 +154,7 @@
 
                     <div class="mb-4" x-show="statusKendala !== '' && statusKendala !== 'Belum Ditangani'">
                         <label class="form-label small fw-bold">Solusi Sementara <span class="text-danger" x-show="statusKendala !== 'Belum Ditangani'">*</span></label>
-                        <textarea name="solusi_sementara" class="form-control rounded-3" rows="2" placeholder="Apa tindakan atau solusi darurat yang sudah dilakukan?"></textarea>
+                        <textarea name="solusi_sementara" class="form-control rounded-3" rows="2" placeholder="Apa tindakan atau solusi darurat yang sudah dilakukan?" :required="statusKendala === 'Selesai' || statusKendala === 'Sebagian Selesai'" :disabled="statusKendala === 'Belum Ditangani'"></textarea>
                     </div>
 
                     <div x-show="statusKendala !== 'Selesai'">
@@ -170,12 +174,12 @@
                                     
                                     <div class="mb-3 mt-1">
                                         <label class="form-label small fw-bold">Tindakan yang akan dilakukan <span class="text-danger">*</span></label>
-                                        <textarea :name="'rtl['+index+'][deskripsi_rtl]'" class="form-control rounded-3" rows="2" required></textarea>
+                                        <textarea :name="'rtl['+index+'][deskripsi_rtl]'" class="form-control rounded-3" rows="2" required :disabled="statusKendala === 'Selesai'"></textarea>
                                     </div>
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">PIC (Penanggung Jawab) <span class="text-danger">*</span></label>
-                                            <select :name="'rtl['+index+'][pic_nip]'" class="form-select rounded-3" required>
+                                            <select :name="'rtl['+index+'][pic_nip]'" class="form-select rounded-3" required :disabled="statusKendala === 'Selesai'">
                                                 <option value="">-- Pilih Pegawai --</option>
                                                 @foreach($pegawais as $p)
                                                     <option value="{{ $p->nip ?? $p->email_bps }}">{{ $p->nama }}</option>
@@ -184,7 +188,7 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">Batas Waktu (Due Date) <span class="text-danger">*</span></label>
-                                            <input type="date" :name="'rtl['+index+'][due_date]'" class="form-control rounded-3" required min="{{ date('Y-m-d') }}">
+                                            <input type="date" :name="'rtl['+index+'][due_date]'" class="form-control rounded-3" required :disabled="statusKendala === 'Selesai'" min="{{ date('Y-m-d') }}">
                                         </div>
                                     </div>
                                 </div>

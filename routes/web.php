@@ -22,7 +22,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     Route::post('indikator/import', [IndikatorController::class, 'import'])->name('indikator.import');
+    Route::post('indikator/import-xy', [IndikatorController::class, 'importXY'])->name('indikator.import-xy');
     Route::get('indikator/template', [IndikatorController::class, 'downloadTemplate'])->name('indikator.template');
+    Route::get('indikator/template-xy', [IndikatorController::class, 'downloadTemplateXY'])->name('indikator.template-xy');
     Route::resource('indikator', IndikatorController::class);
     Route::post('indikator/{indikator}/tautan', [IndikatorController::class, 'updateTautan'])->name('indikator.tautan');
     Route::post('indikator/{indikator}/rich-content', [IndikatorController::class, 'updateRichContent'])->name('indikator.rich-content');

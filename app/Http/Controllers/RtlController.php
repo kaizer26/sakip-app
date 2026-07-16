@@ -17,7 +17,7 @@ class RtlController extends Controller
         $query = Rtl::with(['issue.indikator']);
 
         if (!$user->isAdmin()) {
-            $pegawaiNip = $user->pegawai->nip ?? $user->pegawai->email_bps ?? null;
+            $pegawaiNip = $user->pegawai?->nip ?? $user->pegawai?->email_bps ?? $user->email;
             $query->where('pic_nip', $pegawaiNip);
         }
 
@@ -37,7 +37,7 @@ class RtlController extends Controller
         // Counts for tabs
         $baseQuery = Rtl::query();
         if (!$user->isAdmin()) {
-            $baseQuery->where('pic_nip', $user->pegawai->nip ?? $user->pegawai->email_bps ?? null);
+            $baseQuery->where('pic_nip', $user->pegawai?->nip ?? $user->pegawai?->email_bps ?? $user->email);
         }
         $counts = [
             'semua' => (clone $baseQuery)->count(),
@@ -61,7 +61,7 @@ class RtlController extends Controller
         
         $user = auth()->user();
         if (!$user->isAdmin()) {
-            $pegawaiNip = $user->pegawai->nip ?? $user->pegawai->email_bps ?? null;
+            $pegawaiNip = $user->pegawai?->nip ?? $user->pegawai?->email_bps ?? $user->email;
             if ($rtl->pic_nip !== $pegawaiNip) {
                 abort(403, 'Unauthorized action.');
             }

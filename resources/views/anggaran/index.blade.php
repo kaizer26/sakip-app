@@ -52,12 +52,12 @@
                             @forelse($groupedIndikators as $kode => $group)
                                 @php
                                     $sAnggaran = $group['anggaran'];
-                                    $paguAwal = $sAnggaran ? $sAnggaran->pagu_awal : 0;
-                                    $paguRevisi = $sAnggaran ? $sAnggaran->pagu_revisi : 0;
-                                    $realisasiTw1 = $sAnggaran ? $sAnggaran->realisasi_tw1 : 0;
-                                    $realisasiTw2 = $sAnggaran ? $sAnggaran->realisasi_tw2 : 0;
-                                    $realisasiTw3 = $sAnggaran ? $sAnggaran->realisasi_tw3 : 0;
-                                    $realisasiTw4 = $sAnggaran ? $sAnggaran->realisasi_tw4 : 0;
+                                    $paguAwal = floatval($sAnggaran ? $sAnggaran->pagu_awal : 0);
+                                    $paguRevisi = floatval($sAnggaran ? $sAnggaran->pagu_revisi : 0);
+                                    $realisasiTw1 = floatval($sAnggaran ? $sAnggaran->realisasi_tw1 : 0);
+                                    $realisasiTw2 = floatval($sAnggaran ? $sAnggaran->realisasi_tw2 : 0);
+                                    $realisasiTw3 = floatval($sAnggaran ? $sAnggaran->realisasi_tw3 : 0);
+                                    $realisasiTw4 = floatval($sAnggaran ? $sAnggaran->realisasi_tw4 : 0);
                                     $totalRealisasi = $realisasiTw1 + $realisasiTw2 + $realisasiTw3 + $realisasiTw4;
                                     $persentase = $paguRevisi > 0 ? ($totalRealisasi / $paguRevisi) * 100 : ($paguAwal > 0 ? ($totalRealisasi / $paguAwal) * 100 : 0);
                                 @endphp
@@ -85,7 +85,11 @@
                                             data-nama="[SASARAN] {{ $group['sasaran'] }}"
                                             data-awal="{{ floatval($paguAwal) }}" data-revisi="{{ floatval($paguRevisi) }}"
                                             data-tw1="{{ floatval($realisasiTw1) }}" data-tw2="{{ floatval($realisasiTw2) }}"
-                                            data-tw3="{{ floatval($realisasiTw3) }}" data-tw4="{{ floatval($realisasiTw4) }}">
+                                            data-tw3="{{ floatval($realisasiTw3) }}" data-tw4="{{ floatval($realisasiTw4) }}"
+                                            data-kode_kegiatan="{{ $sAnggaran ? $sAnggaran->kode_kegiatan : '' }}"
+                                            data-nama_kegiatan="{{ $sAnggaran ? $sAnggaran->nama_kegiatan : '' }}"
+                                            data-kode_ro="{{ $sAnggaran ? $sAnggaran->kode_ro : '' }}"
+                                            data-nama_ro="{{ $sAnggaran ? $sAnggaran->nama_ro : '' }}">
                                             <i class="fas fa-edit me-1"></i> Edit
                                         </button>
                                     </td>
@@ -94,12 +98,12 @@
                                 @foreach($group['indikators'] as $indikator)
                                     @php
                                         $anggaran = $indikator->anggarans->first();
-                                        $paguAwal = $anggaran ? $anggaran->pagu_awal : 0;
-                                        $paguRevisi = $anggaran ? $anggaran->pagu_revisi : 0;
-                                        $realisasiTw1 = $anggaran ? $anggaran->realisasi_tw1 : 0;
-                                        $realisasiTw2 = $anggaran ? $anggaran->realisasi_tw2 : 0;
-                                        $realisasiTw3 = $anggaran ? $anggaran->realisasi_tw3 : 0;
-                                        $realisasiTw4 = $anggaran ? $anggaran->realisasi_tw4 : 0;
+                                        $paguAwal = floatval($anggaran ? $anggaran->pagu_awal : 0);
+                                        $paguRevisi = floatval($anggaran ? $anggaran->pagu_revisi : 0);
+                                        $realisasiTw1 = floatval($anggaran ? $anggaran->realisasi_tw1 : 0);
+                                        $realisasiTw2 = floatval($anggaran ? $anggaran->realisasi_tw2 : 0);
+                                        $realisasiTw3 = floatval($anggaran ? $anggaran->realisasi_tw3 : 0);
+                                        $realisasiTw4 = floatval($anggaran ? $anggaran->realisasi_tw4 : 0);
                                         $totalRealisasi = $realisasiTw1 + $realisasiTw2 + $realisasiTw3 + $realisasiTw4;
                                         $persentase = $paguRevisi > 0 ? ($totalRealisasi / $paguRevisi) * 100 : ($paguAwal > 0 ? ($totalRealisasi / $paguAwal) * 100 : 0);
                                     @endphp
@@ -127,7 +131,11 @@
                                                 data-nama="{{ $indikator->indikator_kinerja }}"
                                                 data-awal="{{ floatval($paguAwal) }}" data-revisi="{{ floatval($paguRevisi) }}"
                                                 data-tw1="{{ floatval($realisasiTw1) }}" data-tw2="{{ floatval($realisasiTw2) }}"
-                                                data-tw3="{{ floatval($realisasiTw3) }}" data-tw4="{{ floatval($realisasiTw4) }}">
+                                                data-tw3="{{ floatval($realisasiTw3) }}" data-tw4="{{ floatval($realisasiTw4) }}"
+                                                data-kode_kegiatan="{{ $anggaran ? $anggaran->kode_kegiatan : '' }}"
+                                                data-nama_kegiatan="{{ $anggaran ? $anggaran->nama_kegiatan : '' }}"
+                                                data-kode_ro="{{ $anggaran ? $anggaran->kode_ro : '' }}"
+                                                data-nama_ro="{{ $anggaran ? $anggaran->nama_ro : '' }}">
                                                 <i class="fas fa-edit me-1"></i> Edit
                                             </button>
                                         </td>
@@ -169,6 +177,28 @@
                         <div class="mb-4 bg-light p-3 rounded-3 border border-light-subtle">
                             <span class="badge bg-primary mb-2" id="modal_kode"></span>
                             <div class="fw-bold small text-dark" id="modal_nama"></div>
+                        </div>
+
+                        <div class="col-12 mb-4">
+                            <h6 class="fw-bold small text-primary border-bottom pb-2 mb-3">Informasi Kegiatan & RO</h6>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label fw-bold small">Kode Kegiatan</label>
+                                    <input type="text" name="kode_kegiatan" id="modal_kode_kegiatan" class="form-control rounded-3 shadow-none border-light-subtle">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label fw-bold small">Nama Kegiatan</label>
+                                    <input type="text" name="nama_kegiatan" id="modal_nama_kegiatan" class="form-control rounded-3 shadow-none border-light-subtle">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label fw-bold small">Kode RO</label>
+                                    <input type="text" name="kode_ro" id="modal_kode_ro" class="form-control rounded-3 shadow-none border-light-subtle">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label fw-bold small">Nama RO</label>
+                                    <input type="text" name="nama_ro" id="modal_nama_ro" class="form-control rounded-3 shadow-none border-light-subtle">
+                                </div>
+                            </div>
                         </div>
 
                         <div class="row g-4">
@@ -242,6 +272,10 @@
                 const tw2 = $(this).data('tw2');
                 const tw3 = $(this).data('tw3');
                 const tw4 = $(this).data('tw4');
+                const kode_kegiatan = $(this).data('kode_kegiatan');
+                const nama_kegiatan = $(this).data('nama_kegiatan');
+                const kode_ro = $(this).data('kode_ro');
+                const nama_ro = $(this).data('nama_ro');
 
                 $('#formAnggaran').attr('action', "{{ route('anggaran.store') }}");
                 $('#modal_indikator_id').val(id);
@@ -255,6 +289,10 @@
                 $('#modal_tw2').val(tw2 > 0 ? tw2 : '');
                 $('#modal_tw3').val(tw3 > 0 ? tw3 : '');
                 $('#modal_tw4').val(tw4 > 0 ? tw4 : '');
+                $('#modal_kode_kegiatan').val(kode_kegiatan);
+                $('#modal_nama_kegiatan').val(nama_kegiatan);
+                $('#modal_kode_ro').val(kode_ro);
+                $('#modal_nama_ro').val(nama_ro);
 
                 modal.show();
             });
@@ -268,6 +306,10 @@
                 const tw2 = $(this).data('tw2');
                 const tw3 = $(this).data('tw3');
                 const tw4 = $(this).data('tw4');
+                const kode_kegiatan = $(this).data('kode_kegiatan');
+                const nama_kegiatan = $(this).data('nama_kegiatan');
+                const kode_ro = $(this).data('kode_ro');
+                const nama_ro = $(this).data('nama_ro');
 
                 $('#formAnggaran').attr('action', "{{ route('anggaran.storeSasaran') }}");
                 $('#modal_indikator_id').val('');
@@ -281,6 +323,10 @@
                 $('#modal_tw2').val(tw2 > 0 ? tw2 : '');
                 $('#modal_tw3').val(tw3 > 0 ? tw3 : '');
                 $('#modal_tw4').val(tw4 > 0 ? tw4 : '');
+                $('#modal_kode_kegiatan').val(kode_kegiatan);
+                $('#modal_nama_kegiatan').val(nama_kegiatan);
+                $('#modal_kode_ro').val(kode_ro);
+                $('#modal_nama_ro').val(nama_ro);
 
                 modal.show();
             });

@@ -7,6 +7,7 @@ use App\Models\Indikator;
 use App\Models\Pegawai;
 use PhpOffice\PhpWord\TemplateProcessor;
 use App\Services\RichTemplateProcessor;
+use App\Models\SasaranAnggaran;
 
 class TemplateWordController extends Controller
 {
@@ -35,6 +36,7 @@ class TemplateWordController extends Controller
         \Carbon\Carbon::setLocale('id');
         $date = \Carbon\Carbon::parse($validated['tanggal']);
         $formattedDate = $date->translatedFormat('l, d F Y');
+        $tanggalNotula = $date->translatedFormat('d F Y');
 
         $templatePath = storage_path('app/templates/notulen_capkin.docx');
         if (!file_exists($templatePath)) {
@@ -51,7 +53,7 @@ class TemplateWordController extends Controller
         $templateProcessor->setValue('tahun', $validated['tahun']);
         $templateProcessor->setValue('triwulan', $validated['triwulan']);
         $templateProcessor->setValue('hari_tanggal', $formattedDate);
-        $templateProcessor->setValue('tanggal_notula', $formattedDate);
+        $templateProcessor->setValue('tanggal_notula', $tanggalNotula);
         $templateProcessor->setValue('waktu', $validated['waktu']);
         $templateProcessor->setValue('tempat', $validated['tempat']);
         $templateProcessor->setValue('pimpinan_rapat', $pimpinan->nama);
@@ -69,18 +71,26 @@ class TemplateWordController extends Controller
             'capaianKinerjas' => function ($q) use ($validated) {
                 $q->where('tahun', $validated['tahun'])->where('triwulan', $validated['triwulan']);
             },
-            'tabelRos' => function ($q) use ($validated) {
-                $q->where('tahun', $validated['tahun'])->where('triwulan', $validated['triwulan']);
+            'anggarans' => function ($q) use ($validated) {
+                $q->where('tahun', $validated['tahun']);
+            },
+            'outputMasters',
+            'issues' => function ($q) use ($validated) {
+                $q->where('tahun', $validated['tahun'])->where('triwulan', $validated['triwulan'])->with('rtls');
             }
         ])->get();
 
-        $globalPaguAwal = 0;
-        $globalPaguRevisi = 0;
+        $sasaranAnggarans = SasaranAnggaran::where('tahun', $validated['tahun'])->get();
+        $globalPaguAwal = $sasaranAnggarans->sum('pagu_awal');
+        $globalPaguRevisi = $sasaranAnggarans->sum('pagu_revisi');
         $globalPaguRealisasi = 0;
-        foreach ($indikators as $ind) {
-            $globalPaguAwal += $ind->tabelRos->sum('pagu_awal');
-            $globalPaguRevisi += $ind->tabelRos->sum('pagu_revisi');
-            $globalPaguRealisasi += $ind->tabelRos->sum('pagu_realisasi');
+        
+        $tw = $validated['triwulan'];
+        foreach ($sasaranAnggarans as $sa) {
+            for ($i = 1; $i <= $tw; $i++) {
+                $field = "realisasi_tw{$i}";
+                $globalPaguRealisasi += (float)$sa->$field;
+            }
         }
 
         $templateProcessor->setValue('pagu_awal', number_format($globalPaguAwal, 0, ',', '.'));
@@ -132,65 +142,149 @@ class TemplateWordController extends Controller
             $templateProcessor->setValue("capaian_triwulan#{$blockIdx}", $capaian_triwulan);
             $templateProcessor->setValue("capaian_tahunan#{$blockIdx}", $capaian_tahunan);
 
-            $kendala = $analisis ? html_entity_decode(strip_tags($analisis->kendala)) : '-';
-            $solusi = $analisis ? html_entity_decode(strip_tags($analisis->solusi)) : '-';
-            $tindakLanjut = $indikator->rencana_tindak_lanjut ?? '-';
+            $issues = $indikator->issues;
+            $kendalas = [];
+            $solusis = [];
+            $rtlsDesc = [];
+            $rtlsPic = [];
+            $rtlsBatas = [];
+
+            foreach ($issues as $issue) {
+                if ($issue->deskripsi) $kendalas[] = html_entity_decode(strip_tags($issue->deskripsi));
+                if ($issue->solusi_sementara) $solusis[] = html_entity_decode(strip_tags($issue->solusi_sementara));
+                
+                foreach ($issue->rtls as $rtl) {
+                    if ($rtl->deskripsi_rtl) $rtlsDesc[] = html_entity_decode(strip_tags($rtl->deskripsi_rtl));
+                    if ($rtl->pic_nip) {
+                        $picName = $rtl->pic ? $rtl->pic->nama : $rtl->pic_nip;
+                        $rtlsPic[] = $picName;
+                    }
+                    if ($rtl->due_date) {
+                        $rtlsBatas[] = \Carbon\Carbon::parse($rtl->due_date)->format('d-m-Y');
+                    }
+                }
+            }
+
+            $kendala = count($kendalas) > 0 ? (count($kendalas) == 1 ? $kendalas[0] : implode("\n- ", array_merge([''], $kendalas))) : '-';
+            $solusi = count($solusis) > 0 ? (count($solusis) == 1 ? $solusis[0] : implode("\n- ", array_merge([''], $solusis))) : '-';
+            $tindakLanjut = count($rtlsDesc) > 0 ? (count($rtlsDesc) == 1 ? $rtlsDesc[0] : implode("\n- ", array_merge([''], $rtlsDesc))) : '-';
+            $picTindakLanjut = count($rtlsPic) > 0 ? (count($rtlsPic) == 1 ? $rtlsPic[0] : implode("\n- ", array_merge([''], $rtlsPic))) : '-';
+            $batasWaktu = count($rtlsBatas) > 0 ? (count($rtlsBatas) == 1 ? $rtlsBatas[0] : implode("\n- ", array_merge([''], $rtlsBatas))) : '-';
 
             $templateProcessor->setValue("kendala#{$blockIdx}", $kendala);
             $templateProcessor->setValue("solusi#{$blockIdx}", $solusi);
             $templateProcessor->setValue("tindak_lanjut#{$blockIdx}", $tindakLanjut);
             $templateProcessor->setValue("rencana_tindak_lanjut#{$blockIdx}", $tindakLanjut);
-            $templateProcessor->setValue("pic_tindak_lanjut#{$blockIdx}", $indikator->pic_tindak_lanjut ?? '-');
-            $templateProcessor->setValue("batas_waktu#{$blockIdx}", $indikator->batas_waktu ?? '-');
+            $templateProcessor->setValue("pic_tindak_lanjut#{$blockIdx}", $picTindakLanjut);
+            $templateProcessor->setValue("batas_waktu#{$blockIdx}", $batasWaktu);
 
             $basisData = $indikator->basis_data ? html_entity_decode(strip_tags($indikator->basis_data)) : '-';
-            
+
             $dasarHitung = $capaianData && $capaianData->dasar_hitung ? $capaianData->dasar_hitung : ($indikator->dasar_hitung ? $indikator->dasar_hitung : '-');
             $argumenLogis = $capaianData && $capaianData->argumen_logis ? $capaianData->argumen_logis : '-';
             $penjelasanLainnya = $capaianData && $capaianData->penjelasan_lainnya ? $capaianData->penjelasan_lainnya : ($indikator->penjelasan_lainnya ?? '-');
-            
+            $targetRealisasi = $capaianData && $capaianData->target_realisasi ? $capaianData->target_realisasi : '-';
+
             $templateProcessor->setValue("basis_data#{$blockIdx}", $basisData);
             $templateProcessor->setValue("basis_data_baseline#{$blockIdx}", $basisData);
-            
-            try { $templateProcessor->setHtmlValue("dasar_hitung#{$blockIdx}", $dasarHitung); } catch (\Exception $e) {}
-            try { $templateProcessor->setHtmlValue("argumen_logis#{$blockIdx}", $argumenLogis); } catch (\Exception $e) {}
-            try { $templateProcessor->setHtmlValue("penjelasan_lainnya#{$blockIdx}", $penjelasanLainnya); } catch (\Exception $e) {}
+
+            try {
+                $templateProcessor->setHtmlValue("dasar_hitung#{$blockIdx}", $dasarHitung);
+            } catch (\Exception $e) {
+            }
+            try {
+                $templateProcessor->setHtmlValue("argumen_logis#{$blockIdx}", $argumenLogis);
+            } catch (\Exception $e) {
+            }
+            try {
+                $templateProcessor->setHtmlValue("penjelasan_lainnya#{$blockIdx}", $penjelasanLainnya);
+            } catch (\Exception $e) {
+            }
+            try {
+                $templateProcessor->setHtmlValue("target_realisasi#{$blockIdx}", $targetRealisasi);
+            } catch (\Exception $e) {
+            }
 
             $templateProcessor->setValue("link_bukti_kinerja#{$blockIdx}", $capaianData->link_bukti_kinerja ?? ($indikator->link_bukti_kinerja ?? '-'));
             $templateProcessor->setValue("link_bukti_tindak_lanjut#{$blockIdx}", $capaianData->link_bukti_tindak_lanjut ?? ($indikator->link_bukti_tindak_lanjut ?? '-'));
 
+            // Output Masters (Daftar Nama Output)
+            $outputMasters = $indikator->outputMasters;
+            $daftarOutputHtml = '';
+            if ($outputMasters->count() > 0) {
+                $daftarOutputHtml = '<ol>';
+                foreach ($outputMasters as $out) {
+                    $daftarOutputHtml .= '<li>' . htmlspecialchars($out->nama_output) . '</li>';
+                }
+                $daftarOutputHtml .= '</ol>';
+            } else {
+                $daftarOutputHtml = '-';
+            }
+            try {
+                $templateProcessor->setHtmlValue("daftar_output_master#{$blockIdx}", $daftarOutputHtml);
+            } catch (\Exception $e) {
+            }
+
             // Target X/Y
             $targetObj = $indikator->target;
+            $totalTargetX = 0;
+            $totalTargetY = 0;
             for ($i = 1; $i <= 4; $i++) {
                 $txField = "target_x_tw{$i}";
                 $tyField = "target_y_tw{$i}";
-                $templateProcessor->setValue("target_x_tw{$i}#{$blockIdx}", $targetObj ? $targetObj->$txField : '-');
-                $templateProcessor->setValue("target_y_tw{$i}#{$blockIdx}", $targetObj ? $targetObj->$tyField : '-');
+                $txVal = $targetObj ? $targetObj->$txField : 0;
+                $tyVal = $targetObj ? $targetObj->$tyField : 0;
+                
+                $totalTargetX += (float) $txVal;
+                $totalTargetY += (float) $tyVal;
+                
+                $templateProcessor->setValue("target_x_tw{$i}#{$blockIdx}", $txVal ?: '-');
+                
+                // Calculate percentage: (target_x_tw / target_tahunan_y) * 100
+                $targetTahunanY = (float) $indikator->target_tahunan_y;
+                if ($targetTahunanY > 0) {
+                    $percentage = ((float)$txVal / $targetTahunanY) * 100;
+                    // Format with 2 decimal places if not whole number
+                    $percentageFormatted = (floor($percentage) == $percentage) ? number_format($percentage, 0) : number_format($percentage, 2);
+                    $templateProcessor->setValue("target_y_tw{$i}#{$blockIdx}", $percentageFormatted . '%');
+                } else {
+                    $templateProcessor->setValue("target_y_tw{$i}#{$blockIdx}", '-');
+                }
             }
+            $templateProcessor->setValue("total_target_x#{$blockIdx}", $totalTargetX ?: '-');
+            $templateProcessor->setValue("total_target_y#{$blockIdx}", $totalTargetY ?: '-');
 
             // Rincian Output (Tabel RO via cloneRow)
-            $tabelRos = $indikator->tabelRos;
+            $anggarans = $indikator->anggarans;
             $roCloned = false;
             try {
-                $templateProcessor->cloneRow("ro#{$blockIdx}", count($tabelRos) > 0 ? count($tabelRos) : 1);
+                $templateProcessor->cloneRow("ro#{$blockIdx}", count($anggarans) > 0 ? count($anggarans) : 1);
                 $roCloned = true;
             } catch (\PhpOffice\PhpWord\Exception\Exception $e) {
                 // Ignore cloneRow failure, we will replace the raw block tags with '-'
             }
 
             if ($roCloned) {
-                if (count($tabelRos) > 0) {
-                    foreach ($tabelRos as $outIndex => $tRo) {
+                if (count($anggarans) > 0) {
+                    foreach ($anggarans as $outIndex => $tRo) {
                         $rowIdx = $outIndex + 1;
+                        
+                        $realisasiTW = 0;
+                        for ($i = 1; $i <= $tw; $i++) {
+                            $field = "realisasi_tw{$i}";
+                            $realisasiTW += (float)$tRo->$field;
+                        }
+                        
+                        $paguSisa = $tRo->pagu_revisi > 0 ? ($tRo->pagu_revisi - $realisasiTW) : ($tRo->pagu_awal - $realisasiTW);
 
                         $templateProcessor->setValue("no_ro#{$blockIdx}#{$rowIdx}", $rowIdx . '.');
-                        $templateProcessor->setValue("ro#{$blockIdx}#{$rowIdx}", $tRo->ro);
-                        $templateProcessor->setValue("realisasi_volume_ro#{$blockIdx}#{$rowIdx}", $tRo->realisasi_volume_ro);
-                        $templateProcessor->setValue("progres_ro#{$blockIdx}#{$rowIdx}", $tRo->progres_ro);
+                        $templateProcessor->setValue("ro#{$blockIdx}#{$rowIdx}", $tRo->nama_ro ?? '-');
+                        $templateProcessor->setValue("realisasi_volume_ro#{$blockIdx}#{$rowIdx}", '-');
+                        $templateProcessor->setValue("progres_ro#{$blockIdx}#{$rowIdx}", '-');
                         $templateProcessor->setValue("pagu_awal#{$blockIdx}#{$rowIdx}", number_format($tRo->pagu_awal, 0, ',', '.'));
                         $templateProcessor->setValue("pagu_revisi#{$blockIdx}#{$rowIdx}", number_format($tRo->pagu_revisi, 0, ',', '.'));
-                        $templateProcessor->setValue("pagu_sisa#{$blockIdx}#{$rowIdx}", number_format($tRo->pagu_sisa, 0, ',', '.'));
-                        $templateProcessor->setValue("pagu_realisasi#{$blockIdx}#{$rowIdx}", number_format($tRo->pagu_realisasi, 0, ',', '.'));
+                        $templateProcessor->setValue("pagu_sisa#{$blockIdx}#{$rowIdx}", number_format($paguSisa, 0, ',', '.'));
+                        $templateProcessor->setValue("pagu_realisasi#{$blockIdx}#{$rowIdx}", number_format($realisasiTW, 0, ',', '.'));
                     }
                 } else {
                     $templateProcessor->setValue("no_ro#{$blockIdx}#1", '-');
@@ -232,13 +326,18 @@ class TemplateWordController extends Controller
             if ($sasaranCloned) {
                 $idx = 1;
                 foreach ($sasarans as $sasaranName => $inds) {
-                    $sumAwal = 0;
-                    $sumRevisi = 0;
+                    $firstInd = $inds->first();
+                    $kodeSasaran = $firstInd->kode_sasaran;
+                    
+                    $sa = $sasaranAnggarans->where('kode', $kodeSasaran)->first();
+                    $sumAwal = $sa ? $sa->pagu_awal : 0;
+                    $sumRevisi = $sa ? $sa->pagu_revisi : 0;
                     $sumRealisasi = 0;
-                    foreach ($inds as $ind) {
-                        $sumAwal += $ind->tabelRos->sum('pagu_awal');
-                        $sumRevisi += $ind->tabelRos->sum('pagu_revisi');
-                        $sumRealisasi += $ind->tabelRos->sum('pagu_realisasi');
+                    if ($sa) {
+                        for ($i = 1; $i <= $tw; $i++) {
+                            $field = "realisasi_tw{$i}";
+                            $sumRealisasi += (float)$sa->$field;
+                        }
                     }
 
                     $templateProcessor->setValue("sasaran#{$idx}", $sasaranName);
@@ -345,9 +444,9 @@ class TemplateWordController extends Controller
 
         $pimpinan = Pegawai::find($validated['pimpinan_id']);
         $pembuat = Pegawai::find($validated['pembuat_id']);
-        
+
         $tampilkan_nama = isset($validated['tampilkan_nama']) && $validated['tampilkan_nama'] === 'on';
-        
+
         $pegawais = [];
         $jumlah_baris = 20;
 

@@ -93,6 +93,7 @@
                                         data-penjelasan="{{ $capaian->penjelasan_lainnya ?? '' }}"
                                         data-dasar="{{ $capaian->dasar_hitung ?? '' }}"
                                         data-argumen="{{ $capaian->argumen_logis ?? '' }}"
+                                        data-targetrealisasi="{{ $capaian->target_realisasi ?? '' }}"
                                         data-targety="{{ $targetYVal }}"
                                         title="Kelola Capaian">
                                         <i class="fas fa-edit me-1"></i> Kelola
@@ -180,6 +181,10 @@
                             </div>
 
                             <div class="col-12">
+                                <label class="form-label fw-bold small">Target & Realisasi</label>
+                                <textarea name="target_realisasi" id="target_realisasi" class="form-control rounded-3 shadow-none border-light-subtle" rows="3" placeholder="Jelaskan mengenai target dan realisasi..."></textarea>
+                            </div>
+                            <div class="col-12">
                                 <label class="form-label fw-bold small">Dasar Hitung</label>
                                 <textarea name="dasar_hitung" id="dasar_hitung" class="form-control rounded-3 shadow-none border-light-subtle" rows="3" placeholder="Jelaskan cara menghitung capaian ini..."></textarea>
                             </div>
@@ -264,6 +269,7 @@
                 window.initTinyMCE('#dasar_hitung');
                 window.initTinyMCE('#argumen_logis');
                 window.initTinyMCE('#penjelasan_lainnya');
+                window.initTinyMCE('#target_realisasi');
             }
 
             // Show modal and populate data
@@ -313,6 +319,12 @@
                     tinymce.get('penjelasan_lainnya').setContent(btn.data('penjelasan') ? String(btn.data('penjelasan')) : '');
                 } else {
                     $('#penjelasan_lainnya').val(btn.data('penjelasan'));
+                }
+                
+                if (typeof tinymce !== 'undefined' && tinymce.get('target_realisasi')) {
+                    tinymce.get('target_realisasi').setContent(btn.data('targetrealisasi') ? String(btn.data('targetrealisasi')) : '');
+                } else {
+                    $('#target_realisasi').val(btn.data('targetrealisasi'));
                 }
 
                 $('#link_bukti_kinerja').val(btn.data('kinerja'));
@@ -387,6 +399,12 @@
                         tinymce.get('penjelasan_lainnya').setContent(data.penjelasan_lainnya);
                     } else if (data.penjelasan_lainnya !== undefined) {
                         $('#penjelasan_lainnya').val(data.penjelasan_lainnya);
+                    }
+                    
+                    if(data.target_realisasi !== undefined && window.tinymce && tinymce.get('target_realisasi')) {
+                        tinymce.get('target_realisasi').setContent(data.target_realisasi);
+                    } else if (data.target_realisasi !== undefined) {
+                        $('#target_realisasi').val(data.target_realisasi);
                     }
                     
                     toastr.success(`Berhasil menyalin narasi dari Triwulan ${tw}`);
