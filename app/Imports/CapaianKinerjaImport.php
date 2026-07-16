@@ -94,10 +94,10 @@ class CapaianKinerjaImport implements ToCollection, WithHeadingRow
                         'indikator_id' => $indikator->id,
                         'triwulan' => $this->triwulan,
                         'tahun' => $this->tahun,
-                        'status_kendala' => 'Open',
+                        'status_kendala' => 'Belum Ditangani',
                         'deskripsi' => $kendalas[$i] ?? '-',
                         'solusi_sementara' => $solusis[$i] ?? null,
-                        'pegawai_nip' => auth()->user()->pegawai ? auth()->user()->pegawai->nip : null,
+                        'pegawai_nip' => auth()->user()->pegawai ? auth()->user()->pegawai->nip : '-',
                     ]);
                     
                     if (!empty($rtls[$i])) {

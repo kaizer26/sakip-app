@@ -7,8 +7,9 @@ use App\Models\Indikator;
 use App\Models\IndikatorAnggaran;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
 
-class AnggaranImport implements ToModel, WithHeadingRow
+class AnggaranImport implements ToModel, WithHeadingRow, WithCalculatedFormulas
 {
     public function model(array $row)
     {
@@ -32,6 +33,10 @@ class AnggaranImport implements ToModel, WithHeadingRow
                     'realisasi_tw2' => $row['realisasi_tw2'] ?? 0,
                     'realisasi_tw3' => $row['realisasi_tw3'] ?? 0,
                     'realisasi_tw4' => $row['realisasi_tw4'] ?? 0,
+                    'kode_kegiatan' => $row['kode_kegiatan'] ?? null,
+                    'nama_kegiatan' => $row['nama_kegiatan'] ?? null,
+                    'kode_ro' => $row['kode_ro'] ?? null,
+                    'nama_ro' => $row['nama_ro'] ?? null,
                 ]
             );
         }
@@ -54,6 +59,10 @@ class AnggaranImport implements ToModel, WithHeadingRow
                     'realisasi_tw2' => $row['realisasi_tw2'] ?? 0,
                     'realisasi_tw3' => $row['realisasi_tw3'] ?? 0,
                     'realisasi_tw4' => $row['realisasi_tw4'] ?? 0,
+                    'kode_kegiatan' => $row['kode_kegiatan'] ?? null,
+                    'nama_kegiatan' => $row['nama_kegiatan'] ?? null,
+                    'kode_ro' => $row['kode_ro'] ?? null,
+                    'nama_ro' => $row['nama_ro'] ?? null,
                 ]
             );
         }
