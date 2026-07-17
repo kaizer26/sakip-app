@@ -6,6 +6,7 @@ use App\Models\Indikator;
 use App\Models\IndikatorMedia;
 use App\Http\Requests\IndikatorRequest;
 use App\Imports\IndikatorImport;
+use App\Imports\IndikatorXYImport;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
@@ -129,12 +130,23 @@ class IndikatorController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls'
+            'file' => 'required|mimes:xlsx,xls,csv'
         ]);
 
         Excel::import(new IndikatorImport, $request->file('file'));
 
         return redirect()->route('indikator.index')->with('success', 'Data Indikator berhasil diimport.');
+    }
+
+    public function importXY(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv'
+        ]);
+
+        Excel::import(new IndikatorXYImport, $request->file('file'));
+
+        return redirect()->route('indikator.index')->with('success', 'Data Target dan Definisi X/Y berhasil diimport.');
     }
 
     public function downloadTemplate()
@@ -151,6 +163,22 @@ class IndikatorController extends Controller
             public function __construct($headers) { $this->headers = $headers; }
             public function array(): array { return [$this->headers]; }
         }, 'template_import_indikator.xlsx');
+    }
+
+    public function downloadTemplateXY()
+    {
+        $headers = [
+            'Kode Indikator', 'Definisi X', 'Definisi Y', 
+            'Target Tahunan X', 'Target Tahunan Y',
+            'Target X TW 1', 'Target X TW 2', 'Target X TW 3', 'Target X TW 4', 
+            'Target Y TW 1', 'Target Y TW 2', 'Target Y TW 3', 'Target Y TW 4'
+        ];
+
+        return Excel::download(new class($headers) implements \Maatwebsite\Excel\Concerns\FromArray {
+            protected $headers;
+            public function __construct($headers) { $this->headers = $headers; }
+            public function array(): array { return [$this->headers]; }
+        }, 'template_import_indikator_xy.xlsx');
     }
 
     /**

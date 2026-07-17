@@ -14,7 +14,7 @@ use DOMText;
  */
 class HtmlToOoxml
 {
-    private const BLOCK_ELEMENTS = ['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre', 'ol', 'ul'];
+    private const BLOCK_ELEMENTS = ['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre', 'ol', 'ul', 'table'];
 
     private const HIGHLIGHT_MAP = [
         'FFFF00' => 'yellow', 'FF0000' => 'red', '00FF00' => 'green',
@@ -30,7 +30,16 @@ class HtmlToOoxml
         if (empty(trim(strip_tags($html)))) {
             return '<w:p><w:r><w:t>-</w:t></w:r></w:p>';
         }
-        return (new self())->parse($html);
+        
+        $result = (new self())->parse($html);
+        
+        // Ensure the final output ends with a paragraph to prevent corrupted Word documents
+        // especially when the HTML contains tables (<w:tbl>) that replace the final <w:p> in a table cell.
+        if (!str_ends_with(trim($result), '</w:p>')) {
+            $result .= '<w:p><w:pPr><w:spacing w:after="0"/></w:pPr></w:p>';
+        }
+        
+        return $result;
     }
 
     private function parse(string $html): string
@@ -74,8 +83,28 @@ class HtmlToOoxml
     private function processNode(DOMNode $node, array $runCtx): string
     {
         if ($node instanceof DOMText) {
-            $text = preg_replace('/[ \t]+/', ' ', str_replace(["\r\n", "\r"], "\n", $node->nodeValue));
+            $text = preg_replace('/\s+/', ' ', $node->nodeValue);
             if (trim($text) === '') return '';
+
+            // Check for explicit delimiters: \(...\) or \[...\] or $$...$$
+            $pattern = '/(\\\\\(.+?\\\\\)|\\\\\[.+?\\\\\]|\$\$.+?\$\$)/s';
+            if (preg_match($pattern, $text)) {
+                $parts = preg_split($pattern, $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+                $out = '';
+                foreach ($parts as $part) {
+                    if (preg_match('/^\\\\\((.+?)\\\\\)$/s', $part, $m) || 
+                        preg_match('/^\\\\\[(.+?)\\\\\]$/s', $part, $m) || 
+                        preg_match('/^\$\$(.+?)\$\$$/s', $part, $m)) {
+                        $out .= $this->latexToOmml(trim($m[1]));
+                    } else {
+                        if (trim($part) !== '') {
+                            $out .= $this->makeRun($this->escXml($part), $runCtx);
+                        }
+                    }
+                }
+                return $out;
+            }
+
             return $this->makeRun($this->escXml($text), $runCtx);
         }
 
@@ -91,6 +120,7 @@ class HtmlToOoxml
             in_array($tag, ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']) =>
                 $this->processBlock($node, array_merge($runCtx, ['bold' => true]), $parsed),
             $tag === 'blockquote' => $this->processBlock($node, $runCtx, array_merge($parsed, ['padding-left' => '720twips'])),
+            $tag === 'table' => $this->processTable($node, $runCtx, $parsed),
             $tag === 'br' => '<w:r><w:br/></w:r>',
 
             // Lists
@@ -106,8 +136,8 @@ class HtmlToOoxml
             $tag === 'span' => $this->processInline($node, array_merge($runCtx, $this->styleToCtx($parsed))),
             $tag === 'a' => $this->processLink($node, $runCtx),
 
-            // Skip media/table
-            in_array($tag, ['img', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'figure']) => '',
+            // Skip media
+            in_array($tag, ['img', 'thead', 'tbody', 'tr', 'td', 'th', 'figure']) => '',
 
             // Default: recurse inline
             default => $this->processInline($node, $runCtx),
@@ -155,7 +185,7 @@ class HtmlToOoxml
         $i = 1;
         foreach ($olNode->childNodes as $li) {
             if (!($li instanceof DOMElement) || strtolower($li->tagName) !== 'li') continue;
-            $prefix = $this->makeRun($this->escXml("{$i}.\t"), $runCtx);
+            $prefix = $this->makeRun($this->escXml("{$i}."), $runCtx) . '<w:r><w:tab/></w:r>';
             $body   = '';
             foreach ($li->childNodes as $child) $body .= $this->processNode($child, $runCtx);
             $result .= $this->makeParagraph($prefix . $body, null, '720', '360');
@@ -169,12 +199,139 @@ class HtmlToOoxml
         $result = '';
         foreach ($ulNode->childNodes as $li) {
             if (!($li instanceof DOMElement) || strtolower($li->tagName) !== 'li') continue;
-            $prefix = $this->makeRun($this->escXml("•\t"), $runCtx);
+            $prefix = $this->makeRun($this->escXml("•"), $runCtx) . '<w:r><w:tab/></w:r>';
             $body   = '';
             foreach ($li->childNodes as $child) $body .= $this->processNode($child, $runCtx);
             $result .= $this->makeParagraph($prefix . $body, null, '720', '360');
         }
         return $result;
+    }
+
+    // ── Table elements ────────────────────────────────────────
+
+    private function processTable(DOMElement $node, array $runCtx, array $parsedStyle): string
+    {
+        $rows = '';
+        foreach ($node->childNodes as $child) {
+            if ($child instanceof DOMElement) {
+                $tag = strtolower($child->tagName);
+                if (in_array($tag, ['thead', 'tbody', 'tfoot'])) {
+                    foreach ($child->childNodes as $row) {
+                        if ($row instanceof DOMElement && strtolower($row->tagName) === 'tr') {
+                            $rows .= $this->processTableRow($row, $runCtx);
+                        }
+                    }
+                } elseif ($tag === 'tr') {
+                    $rows .= $this->processTableRow($child, $runCtx);
+                }
+            }
+        }
+        
+        if (empty($rows)) {
+            return '';
+        }
+
+        $maxCols = 0;
+        $trNodes = $node->getElementsByTagName('tr');
+        foreach ($trNodes as $tr) {
+            $cols = 0;
+            foreach ($tr->childNodes as $c) {
+                if ($c instanceof DOMElement && in_array(strtolower($c->tagName), ['td', 'th'])) {
+                    $colspan = (int)$c->getAttribute('colspan');
+                    $cols += $colspan > 1 ? $colspan : 1;
+                }
+            }
+            if ($cols > $maxCols) {
+                $maxCols = $cols;
+            }
+        }
+        
+        $tblGrid = '<w:tblGrid>';
+        for ($i = 0; $i < $maxCols; $i++) {
+            $tblGrid .= '<w:gridCol/>';
+        }
+        $tblGrid .= '</w:tblGrid>';
+
+        return '<w:tbl>'
+             . '<w:tblPr>'
+             . '<w:tblStyle w:val="TableGrid"/>'
+             . '<w:tblW w:w="0" w:type="auto"/>'
+             . '<w:tblBorders>'
+             . '<w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>'
+             . '<w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>'
+             . '<w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>'
+             . '<w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>'
+             . '<w:insideH w:val="single" w:sz="4" w:space="0" w:color="auto"/>'
+             . '<w:insideV w:val="single" w:sz="4" w:space="0" w:color="auto"/>'
+             . '</w:tblBorders>'
+             . '</w:tblPr>'
+             . $tblGrid
+             . $rows
+             . '</w:tbl>';
+    }
+
+    private function processTableRow(DOMElement $node, array $runCtx): string
+    {
+        $cells = '';
+        foreach ($node->childNodes as $child) {
+            if ($child instanceof DOMElement && in_array(strtolower($child->tagName), ['td', 'th'])) {
+                $cells .= $this->processTableCell($child, $runCtx);
+            }
+        }
+        if (empty($cells)) {
+            return '';
+        }
+        return '<w:tr>' . $cells . '</w:tr>';
+    }
+
+    private function processTableCell(DOMElement $node, array $runCtx): string
+    {
+        $isTh = strtolower($node->tagName) === 'th';
+        if ($isTh) {
+            $runCtx['bold'] = true;
+        }
+
+        $content = '';
+        $pendingRuns = '';
+
+        foreach ($node->childNodes as $child) {
+            $isBlock = ($child instanceof DOMElement)
+                && in_array(strtolower($child->tagName), self::BLOCK_ELEMENTS, true);
+
+            if ($isBlock) {
+                if ($pendingRuns !== '') {
+                    $content .= '<w:p><w:pPr><w:spacing w:after="0"/></w:pPr>' . $pendingRuns . '</w:p>';
+                    $pendingRuns = '';
+                }
+                $content .= $this->processNode($child, $runCtx);
+            } else {
+                $pendingRuns .= $this->processNode($child, $runCtx);
+            }
+        }
+
+        if ($pendingRuns !== '') {
+            $content .= '<w:p><w:pPr><w:spacing w:after="0"/></w:pPr>' . $pendingRuns . '</w:p>';
+        }
+
+        if (empty($content)) {
+            $content = '<w:p><w:pPr><w:spacing w:after="0"/></w:pPr></w:p>';
+        } else {
+            if (!str_ends_with(trim($content), '</w:p>')) {
+                $content .= '<w:p><w:pPr><w:spacing w:after="0"/></w:pPr></w:p>';
+            }
+        }
+
+        $tcPr = '<w:tcW w:w="0" w:type="auto"/>';
+        
+        $colspan = (int) $node->getAttribute('colspan');
+        if ($colspan > 1) {
+            $tcPr .= '<w:gridSpan w:val="' . $colspan . '"/>';
+        }
+
+        // Aligning content in cell vertically
+        $tcPr .= '<w:vAlign w:val="center"/>';
+
+        return '<w:tc><w:tcPr>' . $tcPr . '</w:tcPr>' . $content . '</w:tc>';
     }
 
     // ── XML builders ──────────────────────────────────────────
@@ -321,17 +478,9 @@ class HtmlToOoxml
 
     private function convertLatexToOmml(string $ooxml): string
     {
-        // Find text runs containing \(...\) LaTeX delimiters and replace entire
-        // parent <w:r> blocks with OMML <m:oMathPara> elements
-        return preg_replace_callback(
-            '/<w:r>(?:<w:rPr>.*?<\/w:rPr>)?<w:t[^>]*>\s*\\\\\((.+?)\\\\\)\s*<\/w:t><\/w:r>/s',
-            function ($matches) {
-                $latex = html_entity_decode($matches[1], ENT_XML1 | ENT_QUOTES, 'UTF-8');
-                $latex = trim($latex);
-                return $this->latexToOmml($latex);
-            },
-            $ooxml
-        );
+        // Legacy convertLatexToOmml: no longer needed since we handle it in processNode.
+        // We keep this method just to return the original string in case it's called.
+        return $ooxml;
     }
 
     /**

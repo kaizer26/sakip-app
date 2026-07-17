@@ -43,6 +43,8 @@ class Indikator extends Model
         'file_bukti_tindak_lanjut',
         'definisi_x',
         'definisi_y',
+        'target_tahunan_x',
+        'target_tahunan_y',
     ];
 
     public function pic()

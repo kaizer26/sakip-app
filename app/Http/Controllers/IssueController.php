@@ -21,7 +21,7 @@ class IssueController extends Controller
             'rtl' => 'nullable|array',
             'rtl.*.deskripsi_rtl' => 'required_with:rtl|string',
             'rtl.*.pic_nip' => 'required_with:rtl|string',
-            'rtl.*.due_date' => 'required_with:rtl|date|after_or_equal:today',
+            'rtl.*.due_date' => 'required_with:rtl|date',
         ]);
 
         // Business Logic Validation
@@ -46,7 +46,7 @@ class IssueController extends Controller
             return back()->withErrors(['rtl' => 'Rencana Tindak Lanjut (RTL) wajib diisi jika status Belum Ditangani.'])->withInput();
         }
 
-        $pegawaiNip = auth()->user()->pegawai->nip ?? auth()->user()->pegawai->email_bps;
+        $pegawaiNip = auth()->user()->pegawai?->nip ?? auth()->user()->pegawai?->email_bps ?? auth()->user()->email;
 
         // Check if triwulan is locked
         // For simplicity, assuming if it's past the triwulan by a lot, we don't lock yet unless specified. 

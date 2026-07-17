@@ -23,9 +23,11 @@ class CapaianKinerjaImport implements ToCollection, WithHeadingRow
 
     public function collection(Collection $rows)
     {
+        $batasWaktu = $this->tahun . '-12-31';
+
         foreach ($rows as $row) {
-            // Asumsi header excel: kode_indikator, realisasi_tw1, realisasi_tw2, realisasi_tw3, realisasi_tw4,
-            // kendala, solusi, rencana_tindak_lanjut, pic_tindak_lanjut, batas_waktu, link_kinerja, link_rtl_sebelumnya
+            // Asumsi header excel: kode_indikator, realisasi_tw, realisasi_x, realisasi_y,
+            // link_bukti_dukung_kinerja, link_bukti_dukung_rencana_tindak_lanjut_triwulan_sebelumnya
             
             $kode = trim($row['kode_indikator']);
             if (empty($kode)) continue;
@@ -35,9 +37,19 @@ class CapaianKinerjaImport implements ToCollection, WithHeadingRow
 
             // Proses Realisasi untuk Triwulan yang dipilih
             if (isset($row['realisasi_tw']) && is_numeric($row['realisasi_tw'])) {
+                $dataRealisasi = ['realisasi_kumulatif' => $row['realisasi_tw']];
+                
+                if (isset($row['realisasi_x']) && is_numeric($row['realisasi_x'])) {
+                    $dataRealisasi['realisasi_x'] = $row['realisasi_x'];
+                }
+                
+                if (isset($row['realisasi_y']) && is_numeric($row['realisasi_y'])) {
+                    $dataRealisasi['realisasi_y'] = $row['realisasi_y'];
+                }
+
                 Realisasi::updateOrCreate(
                     ['indikator_id' => $indikator->id, 'triwulan' => $this->triwulan],
-                    ['realisasi_kumulatif' => $row['realisasi_tw']]
+                    $dataRealisasi
                 );
             }
 
@@ -52,25 +64,21 @@ class CapaianKinerjaImport implements ToCollection, WithHeadingRow
                 [
                     'link_bukti_kinerja' => $row['link_bukti_dukung_kinerja'] ?? null,
                     'link_bukti_tindak_lanjut' => $row['link_bukti_dukung_rencana_tindak_lanjut_triwulan_sebelumnya'] ?? null,
-                    // Penjelasan lainnya tidak disebutkan di list, kita set nullable if not provided
                 ]
             );
-
-            $batasWaktu = (isset($row['batas_waktu_tl']) && is_numeric($row['batas_waktu_tl'])) 
-                                        ? \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['batas_waktu_tl'])->format('Y-m-d') 
-                                        : ($row['batas_waktu_tl'] ?? null);
-
-            // Tabel: analisis
-            $analisis = Analisis::updateOrCreate(
+            
+            // Generate Analisis default row if it doesn't exist
+            Analisis::updateOrCreate(
                 [
                     'indikator_id' => $indikator->id,
                     'triwulan' => $this->triwulan,
                 ],
                 [
-                    'severity' => 'Low', // Default
-                    'pegawai_nip' => auth()->user()->pegawai ? auth()->user()->pegawai->nip : null,
+                    'severity' => 'Low',
+                    'pegawai_nip' => auth()->user()->pegawai?->nip ?? auth()->user()->pegawai?->email_bps,
                 ]
             );
+
 
             // Parse text to arrays
             $kendalas = $this->parseBulletPoints($row['kendala_yg_dihadapi'] ?? '');
@@ -106,27 +114,40 @@ class CapaianKinerjaImport implements ToCollection, WithHeadingRow
                             'deskripsi_rtl' => $rtls[$i],
                             'pic_nip' => $row['pic_tindak_lanjut'] ?? null,
                             'due_date' => $batasWaktu,
-                            'status_rtl' => 'Belum Selesai',
+                            'status_rtl' => 'Open',
                         ]);
                     }
                 }
             }
+
         }
     }
 
     private function parseBulletPoints($text)
     {
         if (empty($text)) return [];
-        // Split by newline
+        
         $lines = explode("\n", $text);
-        $result = [];
+        $points = [];
+        
         foreach ($lines as $line) {
             $line = trim($line);
             if (empty($line)) continue;
-            // Remove starting bullets like "1.", "-", "•"
-            $line = preg_replace('/^(\d+\.|-|\•|\*)\s*/', '', $line);
-            $result[] = trim($line);
+            
+            // Hapus karakter bullet atau penomoran di awal string
+            $line = preg_replace('/^[-•*\s]+/', '', $line);
+            $line = preg_replace('/^\d+[\.)]\s*/', '', $line);
+            
+            if (!empty($line)) {
+                $points[] = $line;
+            }
         }
-        return $result;
+        
+        // Kalau setelah dipecah baris tidak ada hasilnya
+        if (count($points) === 0) {
+            $points[] = trim($text);
+        }
+        
+        return $points;
     }
 }

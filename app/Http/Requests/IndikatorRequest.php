@@ -41,6 +41,8 @@ class IndikatorRequest extends FormRequest
             'basis_data'                 => 'nullable|string',
             'definisi_x'                 => 'nullable|string|max:500',
             'definisi_y'                 => 'nullable|string|max:500',
+            'target_tahunan_x'           => 'nullable|numeric',
+            'target_tahunan_y'           => 'nullable|numeric',
         ];
     }
 }

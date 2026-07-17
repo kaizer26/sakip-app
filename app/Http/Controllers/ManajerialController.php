@@ -52,7 +52,7 @@ class ManajerialController extends Controller
             $rtl->update(['status_rtl' => 'Closed']);
             // Optionally update the execution with verifier info
             if ($rtl->executions->isNotEmpty()) {
-                $rtl->executions->last()->update(['verified_by' => auth()->user()->pegawai->nip ?? auth()->user()->pegawai->email_bps]);
+                $rtl->executions->last()->update(['verified_by' => auth()->user()->pegawai?->nip ?? auth()->user()->pegawai?->email_bps ?? auth()->user()->email]);
             }
             return redirect()->back()->with('success', 'RTL berhasil diverifikasi dan ditutup.');
         } else {

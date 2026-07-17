@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Evaluasi Kinerja')
+@section('title', '')
 
 @section('content')
     <div class="d-flex justify-content-between align-items-end mb-4">
@@ -8,22 +8,26 @@
             <h4 class="fw-bold text-dark mb-1">Evaluasi Kinerja - Triwulan {{ $triwulan }} - {{ $tahun }}</h4>
             <div class="text-muted small">Daftar Indikator Kinerja Utama dan Pelaporan Kendala.</div>
         </div>
-        <form action="{{ route('evaluasi-kinerja.index') }}" method="GET" class="d-flex gap-1">
-            <select name="tahun" class="form-select form-select-sm rounded-pill shadow-sm" onchange="this.form.submit()">
-                @for($i = date('Y') - 2; $i <= date('Y') + 1; $i++)
-                    <option value="{{ $i }}" {{ $tahun == $i ? 'selected' : '' }}>{{ $i }}</option>
-                @endfor
-            </select>
-            <select name="triwulan" class="form-select form-select-sm rounded-pill shadow-sm" onchange="this.form.submit()">
-                <option value="1" {{ $triwulan == 1 ? 'selected' : '' }}>Triwulan 1</option>
-                <option value="2" {{ $triwulan == 2 ? 'selected' : '' }}>Triwulan 2</option>
-                <option value="3" {{ $triwulan == 3 ? 'selected' : '' }}>Triwulan 3</option>
-                <option value="4" {{ $triwulan == 4 ? 'selected' : '' }}>Triwulan 4</option>
-            </select>
-        </form>
+        
     </div>
 
     <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <h6 class="fw-bold text-primary mb-0"><i class="fas fa-list-check me-2"></i>Daftar Indikator Kinerja</h6>
+            <form action="{{ route('evaluasi-kinerja.index') }}" method="GET" class="d-flex gap-2">
+                <select name="tahun" class="form-select form-select-sm rounded-pill px-3 shadow-sm border-light-subtle" onchange="this.form.submit()" style="min-width: 100px;">
+                    @for($i = date('Y') - 2; $i <= date('Y') + 1; $i++)
+                        <option value="{{ $i }}" {{ $tahun == $i ? 'selected' : '' }}>{{ $i }}</option>
+                    @endfor
+                </select>
+                <select name="triwulan" class="form-select form-select-sm rounded-pill px-3 shadow-sm border-light-subtle" onchange="this.form.submit()" style="min-width: 130px;">
+                    <option value="1" {{ $triwulan == 1 ? 'selected' : '' }}>Triwulan 1</option>
+                    <option value="2" {{ $triwulan == 2 ? 'selected' : '' }}>Triwulan 2</option>
+                    <option value="3" {{ $triwulan == 3 ? 'selected' : '' }}>Triwulan 3</option>
+                    <option value="4" {{ $triwulan == 4 ? 'selected' : '' }}>Triwulan 4</option>
+                </select>
+            </form>
+        </div>
         <div class="card-body p-2">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0 p-2" id="evaluasiTable" style="font-size: 0.9rem;">
@@ -38,6 +42,12 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @php
+                            $sumCapaianTriwulan = 0;
+                            $sumCapaianTahunan = 0;
+                            $countIndikator = 0;
+                            $countIndikatorTriwulan = 0;
+                        @endphp
                         @forelse($indikators as $ind)
                             @php
                                 $realisasi = $ind->realisasis->first();
@@ -48,9 +58,24 @@
                                 $capaianPersen = 0;
                                 if ($targetVal > 0) {
                                     $capaianPersen = ($realisasiVal / $targetVal) * 100;
-                                } elseif ($targetVal == 0 && $realisasiVal > 0) {
-                                    $capaianPersen = 100;
                                 }
+                                if ($capaianPersen > 120) {
+                                    $capaianPersen = 120;
+                                }
+                                
+                                $targetTahunanVal = (float)($ind->target_tahunan ?? 0);
+                                $capaianTahunanPersen = 0;
+                                if ($targetTahunanVal > 0) {
+                                    $capaianTahunanPersen = ($realisasiVal / $targetTahunanVal) * 100;
+                                }
+                                if ($capaianTahunanPersen > 120) {
+                                    $capaianTahunanPersen = 120;
+                                }
+                                
+                                $sumCapaianTriwulan += $capaianPersen;
+                                $sumCapaianTahunan += $capaianTahunanPersen;
+                                $countIndikator++;
+                                if ($capaianPersen != 0) $countIndikatorTriwulan++;
                                 
                                 $issueCount = $ind->issues->count();
                             @endphp
@@ -72,20 +97,18 @@
                                     @endif
                                 </td>
                                 <td class="text-center">
-                                    @if($capaianPersen >= 100)
-                                        <a href="{{ route('target.show', $ind->id) }}" class="btn btn-sm btn-outline-secondary rounded-pill w-100 mb-1">
-                                            <i class="fas fa-search me-1"></i> Lihat Detail
-                                        </a>
-                                    @else
-                                        <button class="btn btn-sm btn-danger rounded-pill w-100 mb-1 btn-lapor-kendala"
-                                            data-id="{{ $ind->id }}"
-                                            data-kode="{{ $ind->kode }}"
-                                            data-nama="{{ $ind->indikator_kinerja }}"
-                                            data-target="{{ $targetVal }}"
-                                            data-realisasi="{{ $realisasiVal }}">
-                                            <i class="fas fa-exclamation-triangle me-1"></i> Lapor Kendala
-                                        </button>
-                                    @endif
+                                    <button class="btn btn-sm btn-danger rounded-pill w-100 mb-1 btn-lapor-kendala"
+                                        data-id="{{ $ind->id }}"
+                                        data-kode="{{ $ind->kode }}"
+                                        data-nama="{{ $ind->indikator_kinerja }}"
+                                        data-target="{{ $targetVal }}"
+                                        data-realisasi="{{ $realisasiVal }}">
+                                        <i class="fas fa-exclamation-triangle me-1"></i> Lapor Kendala
+                                    </button>
+                                    
+                                    <a href="{{ route('target.show', $ind->id) }}" class="btn btn-sm btn-outline-secondary rounded-pill w-100 mb-1">
+                                        <i class="fas fa-search me-1"></i> Lihat Detail
+                                    </a>
                                     
                                     @if($issueCount > 0)
                                         <a href="#" class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill text-decoration-none mt-1 d-inline-block">
@@ -102,6 +125,20 @@
                             </tr>
                         @endforelse
                     </tbody>
+                    @if($countIndikatorTriwulan > 0 || $countIndikator > 0)
+                    <tfoot class="table-light fw-bold">
+                        <tr>
+                            <td colspan="4" class="text-end">Rata-rata Capaian Triwulanan:</td>
+                            <td class="text-center text-primary">{{ $countIndikatorTriwulan > 0 ? number_format($sumCapaianTriwulan / $countIndikatorTriwulan, 2) : 0 }}%</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" class="text-end">Rata-rata Capaian Tahunan:</td>
+                            <td class="text-center text-success">{{ $countIndikator > 0 ? number_format($sumCapaianTahunan / $countIndikator, 2) : 0 }}%</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                    @endif
                 </table>
             </div>
         </div>
@@ -150,7 +187,7 @@
 
                     <div class="mb-4" x-show="statusKendala !== '' && statusKendala !== 'Belum Ditangani'">
                         <label class="form-label small fw-bold">Solusi Sementara <span class="text-danger" x-show="statusKendala !== 'Belum Ditangani'">*</span></label>
-                        <textarea name="solusi_sementara" class="form-control rounded-3" rows="2" placeholder="Apa tindakan atau solusi darurat yang sudah dilakukan?"></textarea>
+                        <textarea name="solusi_sementara" class="form-control rounded-3" rows="2" placeholder="Apa tindakan atau solusi darurat yang sudah dilakukan?" :required="statusKendala === 'Selesai' || statusKendala === 'Sebagian Selesai'" :disabled="statusKendala === 'Belum Ditangani'"></textarea>
                     </div>
 
                     <div x-show="statusKendala !== 'Selesai'">
@@ -170,12 +207,12 @@
                                     
                                     <div class="mb-3 mt-1">
                                         <label class="form-label small fw-bold">Tindakan yang akan dilakukan <span class="text-danger">*</span></label>
-                                        <textarea :name="'rtl['+index+'][deskripsi_rtl]'" class="form-control rounded-3" rows="2" required></textarea>
+                                        <textarea :name="'rtl['+index+'][deskripsi_rtl]'" class="form-control rounded-3" rows="2" required :disabled="statusKendala === 'Selesai'"></textarea>
                                     </div>
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">PIC (Penanggung Jawab) <span class="text-danger">*</span></label>
-                                            <select :name="'rtl['+index+'][pic_nip]'" class="form-select rounded-3" required>
+                                            <select :name="'rtl['+index+'][pic_nip]'" class="form-select rounded-3" required :disabled="statusKendala === 'Selesai'">
                                                 <option value="">-- Pilih Pegawai --</option>
                                                 @foreach($pegawais as $p)
                                                     <option value="{{ $p->nip ?? $p->email_bps }}">{{ $p->nama }}</option>
@@ -184,7 +221,7 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">Batas Waktu (Due Date) <span class="text-danger">*</span></label>
-                                            <input type="date" :name="'rtl['+index+'][due_date]'" class="form-control rounded-3" required min="{{ date('Y-m-d') }}">
+                                            <input type="date" :name="'rtl['+index+'][due_date]'" class="form-control rounded-3" required :disabled="statusKendala === 'Selesai'">
                                         </div>
                                     </div>
                                 </div>

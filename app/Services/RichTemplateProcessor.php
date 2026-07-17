@@ -58,4 +58,34 @@ class RichTemplateProcessor extends TemplateProcessor
             );
         }
     }
+
+    /**
+     * Replace a ${placeholder} with multiple paragraphs, preserving the original
+     * paragraph styling (like bullets or numbering) for each line.
+     */
+    public function setMultilineValue(string $search, array $lines): void
+    {
+        if (empty($lines)) {
+            $lines = ['-'];
+        }
+
+        $unique = 'MULTILINE_' . strtoupper(substr(md5($search . microtime()), 0, 12));
+        $this->setValue($search, $unique);
+
+        $this->tempDocumentMainPart = preg_replace_callback(
+            '/(<w:p\b[^>]*>)(.*?)(<\/w:p>)/s',
+            function($matches) use ($unique, $lines) {
+                if (str_contains($matches[2], $unique)) {
+                    $result = '';
+                    foreach ($lines as $line) {
+                        $content = str_replace($unique, htmlspecialchars($line, ENT_XML1 | ENT_QUOTES, 'UTF-8'), $matches[2]);
+                        $result .= $matches[1] . $content . $matches[3];
+                    }
+                    return $result;
+                }
+                return $matches[0];
+            },
+            $this->tempDocumentMainPart
+        );
+    }
 }

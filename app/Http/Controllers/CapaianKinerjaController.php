@@ -44,6 +44,7 @@ class CapaianKinerjaController extends Controller
             'penjelasan_lainnya' => 'nullable|string',
             'dasar_hitung' => 'nullable|string',
             'argumen_logis' => 'nullable|string',
+            'target_realisasi' => 'nullable|string',
             'realisasi_kumulatif' => 'required|numeric',
             'realisasi_x' => 'nullable|numeric|min:0',
             'realisasi_y' => 'nullable|numeric|min:0',
@@ -100,6 +101,7 @@ class CapaianKinerjaController extends Controller
                 'penjelasan_lainnya' => $validated['penjelasan_lainnya'] ?: null,
                 'dasar_hitung' => $validated['dasar_hitung'] ?: null,
                 'argumen_logis' => $validated['argumen_logis'] ?: null,
+                'target_realisasi' => $validated['target_realisasi'] ?: null,
             ]
         );
 
@@ -129,13 +131,14 @@ class CapaianKinerjaController extends Controller
             ->where('triwulan', $triwulan)
             ->first();
 
-        if ($capaian && ($capaian->dasar_hitung || $capaian->argumen_logis || $capaian->penjelasan_lainnya)) {
+        if ($capaian && ($capaian->dasar_hitung || $capaian->argumen_logis || $capaian->penjelasan_lainnya || $capaian->target_realisasi)) {
             return response()->json([
                 'status' => 'success',
                 'data' => [
                     'dasar_hitung' => $capaian->dasar_hitung ?? '',
                     'argumen_logis' => $capaian->argumen_logis ?? '',
-                    'penjelasan_lainnya' => $capaian->penjelasan_lainnya ?? ''
+                    'penjelasan_lainnya' => $capaian->penjelasan_lainnya ?? '',
+                    'target_realisasi' => $capaian->target_realisasi ?? '',
                 ]
             ]);
         }
@@ -181,11 +184,8 @@ class CapaianKinerjaController extends Controller
         $headers = [
             'Kode Indikator',
             'Realisasi TW',
-            'Kendala yg Dihadapi',
-            'Solusi yg Telah Dilakukan',
-            'Rencana Tindak Lanjut',
-            'PIC Tindak Lanjut',
-            'Batas Waktu TL',
+            'Realisasi X',
+            'Realisasi Y',
             'Link Bukti Dukung Kinerja',
             'Link Bukti Dukung Rencana Tindak Lanjut Triwulan Sebelumnya'
         ];
@@ -197,7 +197,7 @@ class CapaianKinerjaController extends Controller
             $col++;
         }
 
-        $sheet->getStyle('A1:L1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:F1')->getFont()->setBold(true);
 
         $indikators = Indikator::orderBy('kode')->get();
         $row = 2;
