@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers;
 
@@ -17,15 +17,7 @@ class TemplateWordController extends Controller
         return view('template_word.index', compact('pegawais'));
     }
 
-            public function exportNotulenCapaian(Request $request)
-    {
-        if ($request->input('format') === 'word') {
-            return $this->exportNotulenCapaianWord($request);
-        }
-        return $this->exportNotulenCapaianHtml($request);
-    }
-
-public function exportNotulenCapaianWord(Request $request)
+    public function exportNotulenCapaian(Request $request)
     {
         $validated = $request->validate([
             'tahun' => 'required|integer',
@@ -409,101 +401,7 @@ public function exportNotulenCapaianWord(Request $request)
         return response()->download($tempPath)->deleteFileAfterSend(true);
     }
 
-    
-public function exportNotulenCapaianHtml(Request $request)
-    {
-        $validated = $request->validate([
-            'tahun' => 'required|integer',
-            'triwulan' => 'required|integer|between:1,4',
-            'tanggal' => 'required|date',
-            'waktu' => 'required|string',
-            'tempat' => 'required|string',
-            'pimpinan_id' => 'required|exists:pegawais,id',
-            'notulis_id' => 'required|exists:pegawais,id',
-        ]);
-
-        $pimpinan = \App\Models\Pegawai::find($validated['pimpinan_id']);
-        $notulis = \App\Models\Pegawai::find($validated['notulis_id']);
-
-        \Carbon\Carbon::setLocale('id');
-        $date = \Carbon\Carbon::parse($validated['tanggal']);
-        $formattedDate = $date->translatedFormat('l, d F Y');
-        $tanggalNotula = $date->translatedFormat('d F Y');
-
-        $triwulans = ['', 'TRIWULAN I', 'TRIWULAN II', 'TRIWULAN III', 'TRIWULAN IV'];
-        $triwulans1 = ['', 'Triwulan I', 'Triwulan II', 'Triwulan III', 'Triwulan IV'];
-
-        $indikators = \App\Models\Indikator::with([
-            'target',
-            'realisasis' => function ($q) use ($validated) {
-                $q->where('triwulan', $validated['triwulan']);
-            },
-            'analisis' => function ($q) use ($validated) {
-                $q->where('triwulan', $validated['triwulan']);
-            },
-            'capaianKinerjas' => function ($q) use ($validated) {
-                $q->where('tahun', $validated['tahun'])->where('triwulan', $validated['triwulan']);
-            },
-            'anggarans' => function ($q) use ($validated) {
-                $q->where('tahun', $validated['tahun']);
-            },
-            'outputMasters',
-            'issues' => function ($q) use ($validated) {
-                $q->where('tahun', $validated['tahun'])->where('triwulan', $validated['triwulan'])->with('rtls');
-            }
-        ])->get();
-
-        $sasaranAnggarans = \App\Models\SasaranAnggaran::where('tahun', $validated['tahun'])->get();
-
-        $sumCapaianTriwulan = 0;
-        $sumCapaianTahunan = 0;
-        $countIndikator = count($indikators);
-        $countIndikatorTriwulan = 0;
-
-        foreach ($indikators as $indikator) {
-            $realisasi = $indikator->realisasis->first();
-            $targetField = 'target_tw' . $validated['triwulan'];
-            $target = $indikator->target ? $indikator->target->$targetField : '-';
-            $capaian = $realisasi ? $realisasi->realisasi_kumulatif : 0;
-            $targetTahunan = $indikator->target_tahunan ?? 0;
-
-            $capaian_triwulan = 0;
-            if (is_numeric($target) && $target > 0) {
-                $capaian_triwulan = round(($capaian / $target) * 100, 2);
-                if ($capaian_triwulan > 120) $capaian_triwulan = 120;
-            }
-
-            $capaian_tahunan = 0;
-            if (is_numeric($targetTahunan) && $targetTahunan > 0) {
-                $capaian_tahunan = round(($capaian / $targetTahunan) * 100, 2);
-                if ($capaian_tahunan > 120) $capaian_tahunan = 120;
-            }
-
-            $sumCapaianTriwulan += $capaian_triwulan;
-            $sumCapaianTahunan += $capaian_tahunan;
-
-            if ($capaian_triwulan != 0)
-                $countIndikatorTriwulan++;
-        }
-
-        $rata_rata_capaian_triwulan = $countIndikatorTriwulan > 0 ? round($sumCapaianTriwulan / $countIndikatorTriwulan, 2) : 0;
-        $rata_rata_capaian_tahunan = $countIndikator > 0 ? round($sumCapaianTahunan / $countIndikator, 2) : 0;
-
-        return view('template_word.notulen_html', compact(
-            'indikators',
-            'sasaranAnggarans',
-            'pimpinan',
-            'notulis',
-            'validated',
-            'formattedDate',
-            'tanggalNotula',
-            'triwulans',
-            'triwulans1',
-            'rata_rata_capaian_triwulan',
-            'rata_rata_capaian_tahunan'
-        ));
-    }
-public function exportSuratUndangan(Request $request)
+    public function exportSuratUndangan(Request $request)
     {
         $validated = $request->validate([
             'nomor_surat' => 'required|string',

@@ -203,11 +203,11 @@
 
                             <div class="col-12">
                                 <label class="form-label fw-bold small">Tautan Bukti Dukung Kinerja</label>
-                                <input type="url" name="link_bukti_kinerja" id="link_bukti_kinerja" class="form-control rounded-3 shadow-none border-light-subtle" placeholder="https://...">
+                                <input type="text" name="link_bukti_kinerja" id="link_bukti_kinerja" class="form-control rounded-3 shadow-none border-light-subtle" placeholder="https://...">
                             </div>
                             <div class="col-12">
                                 <label class="form-label fw-bold small">Tautan Bukti Dukung Rencana Tindak Lanjut (RTL)</label>
-                                <input type="url" name="link_bukti_tindak_lanjut" id="link_bukti_tindak_lanjut" class="form-control rounded-3 shadow-none border-light-subtle" placeholder="https://...">
+                                <input type="text" name="link_bukti_tindak_lanjut" id="link_bukti_tindak_lanjut" class="form-control rounded-3 shadow-none border-light-subtle" placeholder="https://...">
                             </div>
                         </div>
                     </div>

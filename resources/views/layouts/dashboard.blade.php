@@ -937,7 +937,20 @@
                                     },
                                     onSubmit: function(api) {
                                         const data = api.getData();
-                                        editor.insertContent('\\(' + data.latex + '\\)');
+                                        if (data.latex) {
+                                            let rawLatex = data.latex.trim();
+                                            if (rawLatex.startsWith('$$') && rawLatex.endsWith('$$')) {
+                                                rawLatex = rawLatex.substring(2, rawLatex.length - 2).trim();
+                                            } else if (rawLatex.startsWith('\\(') && rawLatex.endsWith('\\)')) {
+                                                rawLatex = rawLatex.substring(2, rawLatex.length - 2).trim();
+                                            } else if (rawLatex.startsWith('\\[') && rawLatex.endsWith('\\]')) {
+                                                rawLatex = rawLatex.substring(2, rawLatex.length - 2).trim();
+                                            }
+
+                                            const encodedLatex = encodeURIComponent(rawLatex);
+                                            const imgHtml = `<img class="latex-math" src="https://latex.codecogs.com/svg.image?${encodedLatex}" data-latex="${rawLatex}" alt="math formula" style="vertical-align: middle; cursor: pointer;" />&nbsp;`;
+                                            editor.insertContent(imgHtml);
+                                        }
                                         api.close();
                                     }
                                 });

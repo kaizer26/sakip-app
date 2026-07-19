@@ -81,11 +81,28 @@ class CapaianKinerjaImport implements ToCollection, WithHeadingRow
 
 
             // Parse text to arrays
-            $kendalas = $this->parseBulletPoints($row['kendala_yg_dihadapi'] ?? '');
-            $solusis = $this->parseBulletPoints($row['solusi_yg_telah_dilakukan'] ?? '');
-            $rtls = $this->parseBulletPoints($row['rencana_tindak_lanjut'] ?? '');
+            $kendalaRaw = $row['kendala_yg_dihadapi'] ?? '';
+            $solusiRaw = $row['solusi_yg_telah_dilakukan'] ?? '';
+            $rtlRaw = $row['rencana_tindak_lanjut'] ?? '';
+            $picRaw = $row['pic_tindak_lanjut'] ?? '';
+            
+            // Batas waktu 1 nilai untuk semua RTL di baris ini
+            $parsedBatasWaktu = $batasWaktu; // fallback global
+            if (!empty($row['batas_waktu_tindak_lanjut'])) {
+                $rawBatas = $row['batas_waktu_tindak_lanjut'];
+                if (is_numeric($rawBatas)) {
+                    try {
+                        $parsedBatasWaktu = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($rawBatas)->format('Y-m-d');
+                    } catch (\Exception $e) {}
+                } else {
+                    try {
+                        // Jika berupa teks string biasa
+                        $parsedBatasWaktu = \Carbon\Carbon::parse($rawBatas)->format('Y-m-d');
+                    } catch (\Exception $e) {}
+                }
+            }
 
-            if (count($kendalas) > 0 || count($solusis) > 0 || count($rtls) > 0) {
+            if (!empty(trim($kendalaRaw)) || !empty(trim($solusiRaw)) || !empty(trim($rtlRaw))) {
                 // Hapus data lama agar tidak dobel saat re-import
                 $oldIssues = \App\Models\Issue::where('indikator_id', $indikator->id)
                     ->where('triwulan', $this->triwulan)
@@ -96,27 +113,24 @@ class CapaianKinerjaImport implements ToCollection, WithHeadingRow
                     $oi->delete();
                 }
 
-                $maxCount = max(count($kendalas), count($solusis), count($rtls));
-                for ($i = 0; $i < $maxCount; $i++) {
-                    $issue = \App\Models\Issue::create([
-                        'indikator_id' => $indikator->id,
-                        'triwulan' => $this->triwulan,
-                        'tahun' => $this->tahun,
-                        'status_kendala' => 'Belum Ditangani',
-                        'deskripsi' => $kendalas[$i] ?? '-',
-                        'solusi_sementara' => $solusis[$i] ?? null,
-                        'pegawai_nip' => auth()->user()->pegawai ? auth()->user()->pegawai->nip : '-',
+                $issue = \App\Models\Issue::create([
+                    'indikator_id' => $indikator->id,
+                    'triwulan' => $this->triwulan,
+                    'tahun' => $this->tahun,
+                    'status_kendala' => 'Sebagian Selesai',
+                    'deskripsi' => !empty(trim($kendalaRaw)) ? $kendalaRaw : '-',
+                    'solusi_sementara' => !empty(trim($solusiRaw)) ? $solusiRaw : null,
+                    'pegawai_nip' => auth()->user()->pegawai ? auth()->user()->pegawai->nip : '-',
+                ]);
+                
+                if (!empty(trim($rtlRaw))) {
+                    \App\Models\Rtl::create([
+                        'issue_id' => $issue->id,
+                        'deskripsi_rtl' => $rtlRaw,
+                        'pic_nip' => !empty(trim($picRaw)) ? $picRaw : null,
+                        'due_date' => $parsedBatasWaktu,
+                        'status_rtl' => 'Open',
                     ]);
-                    
-                    if (!empty($rtls[$i])) {
-                        \App\Models\Rtl::create([
-                            'issue_id' => $issue->id,
-                            'deskripsi_rtl' => $rtls[$i],
-                            'pic_nip' => $row['pic_tindak_lanjut'] ?? null,
-                            'due_date' => $batasWaktu,
-                            'status_rtl' => 'Open',
-                        ]);
-                    }
                 }
             }
 

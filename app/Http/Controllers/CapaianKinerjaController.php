@@ -187,7 +187,12 @@ class CapaianKinerjaController extends Controller
             'Realisasi X',
             'Realisasi Y',
             'Link Bukti Dukung Kinerja',
-            'Link Bukti Dukung Rencana Tindak Lanjut Triwulan Sebelumnya'
+            'Link Bukti Dukung Rencana Tindak Lanjut Triwulan Sebelumnya',
+            'Kendala Yg Dihadapi',
+            'Solusi Yg Telah Dilakukan',
+            'Rencana Tindak Lanjut',
+            'PIC Tindak Lanjut',
+            'Batas Waktu Tindak Lanjut'
         ];
 
         $col = 'A';
@@ -197,7 +202,7 @@ class CapaianKinerjaController extends Controller
             $col++;
         }
 
-        $sheet->getStyle('A1:F1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:K1')->getFont()->setBold(true);
 
         $indikators = Indikator::orderBy('kode')->get();
         $row = 2;

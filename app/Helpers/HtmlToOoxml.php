@@ -136,8 +136,9 @@ class HtmlToOoxml
             $tag === 'span' => $this->processInline($node, array_merge($runCtx, $this->styleToCtx($parsed))),
             $tag === 'a' => $this->processLink($node, $runCtx),
 
+            $tag === 'img' => $this->processImage($node, $runCtx),
             // Skip media
-            in_array($tag, ['img', 'thead', 'tbody', 'tr', 'td', 'th', 'figure']) => '',
+            in_array($tag, ['thead', 'tbody', 'tr', 'td', 'th', 'figure']) => '',
 
             // Default: recurse inline
             default => $this->processInline($node, $runCtx),
@@ -177,6 +178,20 @@ class HtmlToOoxml
             $runs .= $this->makeRun($this->escXml(" ({$href})"), array_merge($runCtx, ['color' => '595959']));
         }
         return $runs;
+    }
+
+    private function processImage(DOMElement $node, array $runCtx): string
+    {
+        $latex = $node->getAttribute('data-latex');
+        if ($latex) {
+            $latex = trim($latex);
+            if (preg_match('/^\$\$(.+?)\$\$$/s', $latex, $m)) $latex = trim($m[1]);
+            elseif (preg_match('/^\\\\\((.+?)\\\\\)$/s', $latex, $m)) $latex = trim($m[1]);
+            elseif (preg_match('/^\\\\\[(.+?)\\\\\]$/s', $latex, $m)) $latex = trim($m[1]);
+
+            return $this->latexToOmml($latex);
+        }
+        return '';
     }
 
     private function processOrderedList(DOMElement $olNode, array $runCtx): string

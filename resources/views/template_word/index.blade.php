@@ -41,7 +41,7 @@
                     <strong>notulen_capkin.docx</strong> yang ada di storage/app/templates.
                 </div>
 
-                <form action="{{ route('template.word.export.notulen') }}" method="POST">
+                <form action="{{ route('template.word.export.notulen') }}" method="POST" target="_blank">
                     @csrf
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -61,6 +61,13 @@
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Tanggal Rapat</label>
                             <input type="date" name="tanggal" class="form-control" required value="{{ date('Y-m-d') }}">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold">Format Output</label>
+                            <select name="format" class="form-select">
+                                <option value="html">HTML (Live Edit & Print PDF)</option>
+                                <option value="word">Microsoft Word (.docx)</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Waktu Rapat</label>
